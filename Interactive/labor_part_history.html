@@ -1,0 +1,249 @@
+<!-- labor_part_history.html -->
+
+<html>
+
+<head>
+	<title>History of Labor Participation Interactive</title>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/snap.svg/0.4.1/snap.svg-min.js"></script>
+	<style>
+		body {margin-top:0;margin-left:0;font-family: 'Lato'; font-weight:300; line-height:140%; padding-bottom: 100px;}
+
+		.graph1{max-width:745px}
+		.hed{font-family:'Lato';font-size:22px;font-weight:700;}
+		.dek{font-family:'Lato';font-size:17px;margin-bottom:30px;}
+		.note{font-family:'Lato';font-size:11px;margin-top:20px;line-height:1.1;}
+
+		@import url(https://fonts.googleapis.com/css?family=Lato:400,700,300);
+	</style>
+</head>
+
+<body>
+
+	<div class='graph1'>
+		<div class='hed'>An interactive look at participation in the labor force by age</div>
+		<div class='dek'>Click an area on the chart to isolate that category. Slide along the GDP growth graph under the chart to look at a different time period.</div>
+		<svg id="graph1" viewbox='0,-50,745,830' ></svg>
+		<div class='note'>Note: This chart is updated monthly. Data is from the Census Bureau's Current Population Survey. Basic monthly data are used and all months are averaged together for each year. The survey was revised in 1989 and 1994; changes to both question wording and survey weights result in discontinuities in these years that may not be attributable to real changes in the economy. GDP data is: US. Bureau of Economic Analysis, Gross Domestic Product [GDP], retrieved from FRED, Federal Reserve Bank of St. Louis https://research.stlouisfed.org/fred2/series/GDP.</div>
+	</div>
+
+</body>
+
+<script defer>
+var g1 = Snap('#graph1')
+var display='years'
+var color_scale=['#67c2a5','#fc8d62','#8da0cb','#e78ac3','#a6d854','#ffd92f','#e5c494','#b3b3b3']
+
+loadmain('main.csv',function(main){
+	max_year=2015
+	min_year=1976
+	startmonth=main[0][2]
+	endmonth=main[0][3]
+	for(var i=0;i<main.length;i++){
+		if(main[i][1]>max_year){max_year=main[i][1]}
+	}
+	current_slide_year=max_year
+
+	base_g1()
+	basekey_g1()
+	year_slider()
+	redraw_g1(current_slide_year)
+})
+
+function base_g1(){
+	// draw the axes and labels for graph 1
+	// ticks on the x-axis and y-axis dotted lines
+	ages=[15,30,45,60,75]
+
+	for(var i=0;i<ages.length;i++){
+		var tick=g1.line(80+(i*163.5),620,80+(i*163.5),626).attr({stroke:'black','stroke-width':1,'shape-rendering':'crispEdges'})
+		var ticktext=g1.text(80+(i*163.5),625,ages[i]).attr({'font-family':'Lato','text-anchor':'middle','dominant-baseline':'text-before-edge','font-size':'17px'})
+	}
+
+	// var axislabel=g1.text(80+(2*163.5),655,'Age').attr({'font-family':'Lato','text-anchor':'middle','dominant-baseline':'text-before-edge','font-size':'18px','font-weight':700})
+	var ticktext=g1.text(70+(0*163.5),641,'years old').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'text-before-edge','font-size':'17px'})
+	var ticktext=g1.text(90+(4*163.5),641,'years old').attr({'font-family':'Lato','text-anchor':'end','dominant-baseline':'text-before-edge','font-size':'17px'})
+
+	// x grid lines and labels on the y-axis
+	var xaxis=g1.line(60,620,734.5,620).attr({stroke:'black','stroke-width':1,'shape-rendering':'crispEdges'})
+	var x20=g1.line(60,500,734,500).attr({stroke:'#cccccc','stroke-width':1,'shape-rendering':'crispEdges'})
+	var x40=g1.line(60,380,734,380).attr({stroke:'#cccccc','stroke-width':1,'shape-rendering':'crispEdges'})
+	var x60=g1.line(60,260,734,260).attr({stroke:'#cccccc','stroke-width':1,'shape-rendering':'crispEdges'})
+	var x80=g1.line(60,140,734,140).attr({stroke:'#cccccc','stroke-width':1,'shape-rendering':'crispEdges'})
+	var x100=g1.line(60,20,734,20).attr({stroke:'#cccccc','stroke-width':1,'shape-rendering':'crispEdges'})
+
+	var xaxisl=g1.text(55,620,'0%').attr({'font-family':'Lato','text-anchor':'end','dominant-baseline':'central','font-size':'18px'})
+	var x20l=g1.text(55,500,'20%').attr({'font-family':'Lato','text-anchor':'end','dominant-baseline':'central','font-size':'18px'})
+	var x40l=g1.text(55,380,'40%').attr({'font-family':'Lato','text-anchor':'end','dominant-baseline':'central','font-size':'18px'})
+	var x60l=g1.text(55,260,'60%').attr({'font-family':'Lato','text-anchor':'end','dominant-baseline':'central','font-size':'18px'})
+	var x80l=g1.text(55,140,'80%').attr({'font-family':'Lato','text-anchor':'end','dominant-baseline':'central','font-size':'18px'})
+	var x100l=g1.text(55,20,'100%').attr({'font-family':'Lato','text-anchor':'end','dominant-baseline':'central','font-size':'18px'})
+}
+
+function basekey_g1(){
+	var ft=g1.rect(60,-45,20,10).attr({fill:color_scale[0],'shape-rendering':'crispEdges',cursor:'pointer'})
+	var pt=g1.rect(223.5,-45,20,10).attr({fill:color_scale[1],'shape-rendering':'crispEdges',cursor:'pointer'})
+	var unemp=g1.rect(387,-45,20,10).attr({fill:color_scale[2],'shape-rendering':'crispEdges',cursor:'pointer'})
+	var disabled=g1.rect(550.5,-45,20,10).attr({fill:color_scale[3],'shape-rendering':'crispEdges',cursor:'pointer'})
+	var carer=g1.rect(60,-25,20,10).attr({fill:color_scale[4],'shape-rendering':'crispEdges',cursor:'pointer'})
+	var retired=g1.rect(223.5,-25,20,10).attr({fill:color_scale[5],'shape-rendering':'crispEdges',cursor:'pointer'})
+	var student=g1.rect(387,-25,20,10).attr({fill:color_scale[6],'shape-rendering':'crispEdges',cursor:'pointer'})
+	var other=g1.rect(550.5,-25,20,10).attr({fill:color_scale[7],'shape-rendering':'crispEdges',cursor:'pointer'})
+
+	var fttext=g1.text(85,-40,'Full-time employed').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
+	var fttext=g1.text(248.5,-40,'Part-time employed').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
+	var fttext=g1.text(412,-40,'Unemployed').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
+	var fttext=g1.text(575,-40,'Disabled').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
+	var fttext=g1.text(85,-20,'Carer').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
+	var fttext=g1.text(248.5,-20,'Retired').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
+	var fttext=g1.text(412,-20,'Student').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
+	var fttext=g1.text(575,-20,'Other').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
+}
+
+function year_slider(){
+	// set up basic slider elements
+	var slider_label1=g1.text(54,717,'GDP').attr({'font-family':'Lato','text-anchor':'end','dominant-baseline':'central','font-size':'14px'})
+	var slider_label2=g1.text(54,731,'growth').attr({'font-family':'Lato','text-anchor':'end','dominant-baseline':'central','font-size':'14px'})
+	var slider_box=g1.rect(60,710,670,30).attr({fill:'none','stroke-width':1,'stroke':'#cccccc','shape-rendering':'crispEdges'})
+	var selected_width=670/(max_year-min_year)
+
+
+	var moveFuncfloat=function(dx,dy,posx,posy){
+		coords=this.getBBox()
+		if(coords.x-prevx+dx<60){
+			newx=60
+		} else if (coords.x-prevx+dx>730-coords.width){
+			newx=730-coords.width
+		} else {
+			newx=coords.x-prevx+dx
+		}
+		this.attr({x:newx})
+		g1.selectAll("text[ident='slidetext']").attr({x:newx+(coords.width/2)})
+		current_year=g1.select("text[ident='slidetext']").attr('text')
+		year=Math.ceil(((newx-60)/coords.width)+min_year)
+		g1.select("text[ident='slidetext']").attr({text:year})
+		if(year!=current_year){current_slide_year=year;redraw_g1(year)}
+
+		prevx=dx
+	}
+
+	readcsv('gdp.csv',1,function(final){
+	// retrieve recessions and shade GDP growth graph appropriately
+		readcsv('recessions.csv',1,function(rec){
+			var start=min_year+(startmonth-1)/12
+			var end=max_year+(endmonth-1)/12
+			var range=end-start
+			rec_portion=670-670*((end-rec[rec.length-1][0])/range)
+			// period_width=670/final.length
+			for(var i=0;i<rec.length;i++){
+				x_coord=60+((rec[i][0]-start)/range)*670
+				if(x_coord>=60){
+					var rec_rect=g1.rect(x_coord,710,rec_portion/rec.length,30).attr({fill:'#dddddd',opacity:rec[i][1],'stroke-width':0,'shape-rendering':'crispEdges'})
+				}
+			}
+			gdp_portion=670-670*((end-final[final.length-1][0])/range)
+			// retrieve gdp growth and draw the spark line for GDP growth
+			var min_gdp=0
+			var max_gdp=0
+			for(var i=0;i<final.length;i++){
+				if (final[i][1]<min_gdp){min_gdp=final[i][1]}
+				if (final[i][1]>max_gdp){max_gdp=final[i][1]}
+			}
+
+			var zero_value=740-((-min_gdp)/(max_gdp-min_gdp))*30
+			var zero=g1.line(60,zero_value,730,zero_value).attr({'stroke-width':1,'stroke':'#cccccc'})
+
+			var data=final[0][1]
+			var prev_value=740-((data-min_gdp)/(max_gdp-min_gdp))*30
+			for(var i=0;i<final.length;i++){
+				var data=final[i][1]
+				var data_value=740-((data-min_gdp)/(max_gdp-min_gdp))*30
+
+				var start=min_year+(startmonth-1)/12
+				var end=max_year+(endmonth-1)/12
+				var range=end-start
+				var x_value=60+((final[i][0]-start)/range)*gdp_portion
+
+				if(x_value>=60 & x_value<=730){
+					var seg=g1.line(x_value,prev_value,x_value+(gdp_portion/final.length),data_value).attr({'stroke-width':1,'stroke':color_scale[0]})
+				}
+				var prev_value=data_value
+			}
+			
+			// draw the slider in here so that it draws after all the recession blocks
+			var selected=g1.rect(730-selected_width,705,selected_width,40).attr({fill:'#333333','stroke-width':1,'stroke':'black','shape-rendering':'crispEdges','fill-opacity':.1,cursor:'move'})
+			var slider_label2=g1.text(395,755,'slide to pick a year (recessions are shaded, red lines indicate a major change to the CPS survey)').attr({'font-family':'Lato','text-anchor':'middle','dominant-baseline':'central','font-size':'14px'})
+			var yearlabel=g1.text(730-selected_width+(selected_width/2),690,['1/2015-','12/2015']).attr({'font-family':'Lato','text-anchor':'middle','font-size':'12px','font-weight':700,ident:'slidetext'})
+			yearlabel.selectAll("tspan:not(:first-child)").attr({x:yearlabel.attr('x'),dy:1*parseFloat(yearlabel.attr('font-size'))})
+			selected.drag(moveFuncfloat,function(){x=this.attr('x');y=this.attr('y');prevx=0;prevy=0})
+		})
+	})
+}
+
+function redraw_g1(year){
+
+}
+
+function readcsv(file,dateflag,callback) {
+	var rawFile = new XMLHttpRequest();
+	rawFile.open("GET", file);
+	rawFile.onreadystatechange = function () {
+		if(rawFile.readyState === 4) {
+			if(rawFile.status === 200 || rawFile.status == 0) {
+				var text = rawFile.responseText;
+				text=text.split('\n')
+				for(var i=0;i<text.length;i++){
+					text[i]=text[i].split(',')
+				}
+				var final=[]
+
+				// return years only
+				if(dateflag==0){
+					for(var i=1;i<text.length;i++){
+						final.push([parseInt(text[i][0].split('-')[0]),parseFloat(text[i][1])])
+					}
+				}
+
+				// convert months to fractions and return years+(months-1)/12
+				if(dateflag==1){
+					for(var i=1;i<text.length;i++){
+						final.push([parseFloat(text[i][0].split('-')[0])+(parseFloat(text[i][0].split('-')[1])-1)/12,parseFloat(text[i][1])])
+					}
+				}
+				callback(final)
+			}
+		}
+	}
+	rawFile.send(null);
+}
+
+function loadmain(file,callback){
+	var rawFile = new XMLHttpRequest();
+	rawFile.open("GET", file);
+	rawFile.onreadystatechange = function () {
+		if(rawFile.readyState === 4) {
+			if(rawFile.status === 200 || rawFile.status == 0) {
+				var text = rawFile.responseText;
+				text=text.split('\n')
+
+				for(var i=0;i<text.length;i++){
+					text[i]=text[i].split(',')
+				}
+
+				main=[]
+				for(var i=1;i<text.length;i++){
+					main.push([parseInt(text[i][0]),parseInt(text[i][1]),parseInt(text[i][2]),parseInt(text[i][3]),text[i][4],parseFloat(text[i][5]),parseFloat(text[i][6]),parseFloat(text[i][7]),parseFloat(text[i][8]),parseFloat(text[i][9]),parseFloat(text[i][10]),parseFloat(text[i][11]),parseFloat(text[i][12])])
+				}
+
+				console.log(main)
+				callback(main)
+			}
+		}
+	}
+	rawFile.send(null);
+}
+
+
+
+</script>
+
+</html>
