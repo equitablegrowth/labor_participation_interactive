@@ -104,11 +104,12 @@ function year_slider(){
 	var slider_label1=g1.text(54,717,'GDP').attr({'font-family':'Lato','text-anchor':'end','dominant-baseline':'central','font-size':'14px'})
 	var slider_label2=g1.text(54,731,'growth').attr({'font-family':'Lato','text-anchor':'end','dominant-baseline':'central','font-size':'14px'})
 	var slider_box=g1.rect(60,710,670,30).attr({fill:'none','stroke-width':1,'stroke':'#cccccc','shape-rendering':'crispEdges'})
-	var selected_width=670/(max_year-min_year)
+	var selected_width=670/(main.length/61)
 
 
 	var moveFuncfloat=function(dx,dy,posx,posy){
 		coords=this.getBBox()
+
 		if(coords.x-prevx+dx<60){
 			newx=60
 		} else if (coords.x-prevx+dx>730-coords.width){
@@ -116,13 +117,17 @@ function year_slider(){
 		} else {
 			newx=coords.x-prevx+dx
 		}
-		this.attr({x:newx})
-		g1.selectAll("text[ident='slidetext']").attr({x:newx+(coords.width/2)})
+		snap=newx
+		this.attr({x:snap})
+		g1.selectAll("text[ident='slidetext']").attr({x:snap+(coords.width/2)})
 		current_year=g1.select("text[ident='slidetext']").attr('text')
-		year=Math.ceil(((newx-60)/coords.width)+min_year)
-		g1.select("text[ident='slidetext']").attr({text:year})
-		if(year!=current_year){current_slide_year=year;redraw_g1(year)}
-
+		year=Math.ceil(((snap-60)/coords.width)+min_year)
+		if(startmonth!=1){
+			g1.select("text[ident='slidetext']").attr({text:[startmonth+'/'+(year-1)+'-',endmonth+'/'+year]})
+		} else{
+			g1.select("text[ident='slidetext']").attr({text:[startmonth+'/'+(year)+'-',endmonth+'/'+year]})
+		}
+		g1.select("text[ident='slidetext']").selectAll("tspan:not(:first-child)").attr({x:g1.select("text[ident='slidetext']").attr('x'),dy:12})
 		prevx=dx
 	}
 
@@ -136,6 +141,7 @@ function year_slider(){
 			// period_width=670/final.length
 			for(var i=0;i<rec.length;i++){
 				x_coord=60+((rec[i][0]-start)/range)*670
+				console.log(x_coord)
 				if(x_coord>=60){
 					var rec_rect=g1.rect(x_coord,710,rec_portion/rec.length,30).attr({fill:'#dddddd',opacity:rec[i][1],'stroke-width':0,'shape-rendering':'crispEdges'})
 				}
@@ -154,14 +160,14 @@ function year_slider(){
 
 			var data=final[0][1]
 			var prev_value=740-((data-min_gdp)/(max_gdp-min_gdp))*30
-			for(var i=0;i<final.length;i++){
+			for(var i=1;i<final.length;i++){
 				var data=final[i][1]
 				var data_value=740-((data-min_gdp)/(max_gdp-min_gdp))*30
 
 				var start=min_year+(startmonth-1)/12
 				var end=max_year+(endmonth-1)/12
 				var range=end-start
-				var x_value=60+((final[i][0]-start)/range)*gdp_portion
+				var x_value=60+((final[i-1][0]-start)/range)*gdp_portion
 
 				if(x_value>=60 & x_value<=730){
 					var seg=g1.line(x_value,prev_value,x_value+(gdp_portion/final.length),data_value).attr({'stroke-width':1,'stroke':color_scale[0]})
@@ -172,9 +178,29 @@ function year_slider(){
 			// draw the slider in here so that it draws after all the recession blocks
 			var selected=g1.rect(730-selected_width,705,selected_width,40).attr({fill:'#333333','stroke-width':1,'stroke':'black','shape-rendering':'crispEdges','fill-opacity':.1,cursor:'move'})
 			var slider_label2=g1.text(395,755,'slide to pick a year (recessions are shaded, red lines indicate a major change to the CPS survey)').attr({'font-family':'Lato','text-anchor':'middle','dominant-baseline':'central','font-size':'14px'})
-			var yearlabel=g1.text(730-selected_width+(selected_width/2),690,['1/2015-','12/2015']).attr({'font-family':'Lato','text-anchor':'middle','font-size':'12px','font-weight':700,ident:'slidetext'})
+			var yearlabel=g1.text(730-selected_width+(selected_width/2),690,[main[0][4].split('-')[0]+'-',main[0][4].split('-')[1]]).attr({'font-family':'Lato','text-anchor':'middle','font-size':'12px','font-weight':700,ident:'slidetext'})
 			yearlabel.selectAll("tspan:not(:first-child)").attr({x:yearlabel.attr('x'),dy:1*parseFloat(yearlabel.attr('font-size'))})
-			selected.drag(moveFuncfloat,function(){x=this.attr('x');y=this.attr('y');prevx=0;prevy=0})
+			selected.drag(moveFuncfloat,function(){x=this.attr('x');y=this.attr('y');prevx=0;prevy=0},function(){
+				breaks=[60]
+				for(var i=0;i<main.length/61;i++){
+					breaks.push(breaks[breaks.length-1]+selected_width)
+				}
+
+				snap=closest(breaks,newx)
+				this.animate({x:snap},50)
+
+				current_year=g1.select("text[ident='slidetext']").attr('text')
+				year=Math.ceil(((snap-60)/coords.width)+min_year)
+				if(startmonth!=1){
+					g1.select("text[ident='slidetext']").attr({text:[startmonth+'/'+(year-1)+'-',endmonth+'/'+year]})
+				} else{
+					g1.select("text[ident='slidetext']").attr({text:[startmonth+'/'+(year)+'-',endmonth+'/'+year]})
+				}
+				g1.select("text[ident='slidetext']").selectAll("tspan:not(:first-child)").attr({x:snap+(coords.width/2),dy:12})
+				g1.selectAll("text[ident='slidetext']").attr({x:snap+(coords.width/2)})
+				if(year!=current_slide_year){current_slide_year=year;redraw_g1(year)}
+				console.log(current_slide_year)
+			})
 		})
 	})
 }
@@ -242,7 +268,20 @@ function loadmain(file,callback){
 	rawFile.send(null);
 }
 
-
+// from stackoverflow - Umesh Patil: http://stackoverflow.com/a/8585063
+function closest(array,num){
+    var i=0;
+    var minDiff=1000;
+    var ans;
+    for(i in array){
+         var m=Math.abs(num-array[i]);
+         if(m<minDiff){ 
+                minDiff=m; 
+                ans=array[i]; 
+            }
+      }
+    return ans;
+}
 
 </script>
 
