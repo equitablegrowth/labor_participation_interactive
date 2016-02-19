@@ -6,14 +6,13 @@
 	<title>History of Labor Participation Interactive</title>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/snap.svg/0.4.1/snap.svg-min.js"></script>
 	<style>
-		body {margin-top:0;margin-left:0;font-family: 'Lato'; font-weight:300; line-height:140%; padding-bottom: 100px;}
+		@import url(https://fonts.googleapis.com/css?family=Lato:400,700);
+		body {margin-top:50px;margin-left:50px;font-family: 'Lato'; font-weight:300; line-height:140%; padding-bottom: 100px;}
 
 		.graph1{max-width:745px}
 		.hed{font-family:'Lato';font-size:22px;font-weight:700;}
 		.dek{font-family:'Lato';font-size:17px;margin-bottom:20px;}
-		.note{font-family:'Lato';font-size:11px;margin-top:20px;line-height:1.1;}
-
-		@import url(https://fonts.googleapis.com/css?family=Lato:400,700,300);
+		.note{font-family:'Lato';font-size:11px;margin-top:20px;line-height:1.1;}		
 	</style>
 </head>
 
@@ -216,7 +215,7 @@ function year_slider(){
 			// draw the slider in here so that it draws after all the recession blocks
 			selected=g1.rect(710-selected_width,705,selected_width,40).attr({fill:'#333333','stroke-width':1,'stroke':'black','shape-rendering':'crispEdges','fill-opacity':.1,cursor:'move'})
 			var shade=g1.rect(304,748,47,14).attr({fill:'#ddd'})
-			var slider_label2=g1.text(385,760,['slide to pick a year (recessions are shaded, ','red lines',' indicate a major change to the CPS survey)']).attr({'font-family':'Lato','text-anchor':'middle','dominant-baseline':'central','font-size':'14px'})
+			var slider_label2=g1.text(385,760,['slide to pick a year (recessions are shaded, ','red lines',' indicate a major change to the CPS survey)']).attr({'font-family':'Lato','text-anchor':'middle','font-size':'14px'})
 			slider_label2.selectAll("tspan")[1].attr({fill:'red'})
 			var yearlabel=g1.text(710-selected_width+(selected_width/2),690,[main[0][4].split('-')[0]+'-',main[0][4].split('-')[1]]).attr({'font-family':'Lato','text-anchor':'middle','font-size':'12px','font-weight':700,ident:'slidetext'})
 			yearlabel.selectAll("tspan:not(:first-child)").attr({x:yearlabel.attr('x'),dy:1*parseFloat(yearlabel.attr('font-size'))})
@@ -226,6 +225,8 @@ function year_slider(){
 					for(var i=0;i<main.length/61;i++){
 						breaks.push(breaks[breaks.length-1]+selected_width)
 					}
+
+					console.log(breaks)
 
 					snap=closest(breaks,newx)
 					this.animate({x:snap},50)
@@ -240,7 +241,6 @@ function year_slider(){
 					g1.select("text[ident='slidetext']").selectAll("tspan:not(:first-child)").attr({x:snap+(coords.width/2),dy:12})
 					g1.selectAll("text[ident='slidetext']").attr({x:snap+(coords.width/2)})
 					if(year!=current_slide_year){current_slide_year=year;redraw_g1(year,0,gmin,gmax)}
-					console.log(current_slide_year)
 				}
 			})
 		})
@@ -312,8 +312,6 @@ function redraw_g1(year,newdraw,min,max){
 		positions.push(80+(i+1)*(654/60))
 	}
 
-	console.log('minmax',min,max)
-
 	for(var i=5;i<13;i++){
 		if(i<min | i+1>max){
 			try{
@@ -334,9 +332,7 @@ function redraw_g1(year,newdraw,min,max){
 		// now move up to the top path, which will become the new base path
 		newbase=[]
 		dvalue=data[data.length-1][i]
-		console.log(dvalue)
 		dvalue=get_value(parseFloat(dvalue)+parseFloat(base[base.length-1]))
-		console.log(dvalue)
 		path=path+'L'+positions[positions.length-1]+' '+dvalue
 
 		for(var j=60;j>=0;j--){
@@ -370,7 +366,6 @@ function redraw_g1(year,newdraw,min,max){
 
 function clickredraw(ev){
 	if(gclicked==0){
-		console.log('notclicked')
 		item=Snap(ev.target)
 		type=item.attr('id')
 		type=type.slice(4,type.length)
@@ -379,7 +374,6 @@ function clickredraw(ev){
 		gclicked=1
 		redraw_g1(current_slide_year,0,parseInt(type),parseInt(type)+1)
 	} else if(gclicked==1){
-		console.log('clicked')
 		gclicked=0
 		redraw_g1(current_slide_year,1,5,13)
 	}
@@ -463,7 +457,6 @@ function loadmain(file,callback){
 					main.push([parseInt(text[i][0]),parseInt(text[i][1]),parseInt(text[i][2]),parseInt(text[i][3]),text[i][4],parseFloat(text[i][5]),parseFloat(text[i][6]),parseFloat(text[i][7]),parseFloat(text[i][8]),parseFloat(text[i][9]),parseFloat(text[i][10]),parseFloat(text[i][11]),parseFloat(text[i][12])])
 				}
 
-				console.log(main)
 				callback(main)
 			}
 		}

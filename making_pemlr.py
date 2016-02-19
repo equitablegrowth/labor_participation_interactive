@@ -2,9 +2,10 @@ from __future__ import division
 import csv
 import pandas as pd
 import os
-import csv
 import sys
 import codecs
+
+# this code was used to create the original main.csv but that file should be updated via scraper.py going forward
 
 # PEMLR
 	# 1	EMPLOYED-AT WORK
