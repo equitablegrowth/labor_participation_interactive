@@ -46,7 +46,7 @@ import codecs
 	# 6 Student: (PEMLR == 7 and PENLFACT == 3)
 	# 7 Other: (PEMLR == 7 and PENLFACT = 6) or (PEMLR == 7 and PENLFACT == -1)
 
-folder_location='/Users/austinclemens/Desktop/Bruenig Interactive/CPS datasets/'
+folder_location='/Users/austinclemens/Desktop/labor_participation_interactive/CPS datasets/'
 
 def parse_CPS(folder_location=folder_location):
 	files=os.listdir(folder_location)
@@ -57,8 +57,8 @@ def parse_CPS(folder_location=folder_location):
 
 	for file in files:
 		print file
+		location=folder_location+file
 		try:
-			location=folder_location+file
 			with open(location,'rb') as csvfile:
 				reader=csv.reader(csvfile)
 				data=[row for row in reader]
@@ -278,6 +278,7 @@ def output_for_interactive(parsed):
 
 # data=pd.DataFrame(data,columns=['','year','month','age','total_n','b0','b1','b2','b3','b4','b5','b6','b7'])
 
+# df.to_csv('out.csv')
 
 
 

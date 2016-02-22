@@ -3,16 +3,31 @@ import csv
 import re
 import zipfile
 import os.path
+import pandas as pd
 
+basepath=os.path.dirname(os.path.abspath(__file__))
 cpsloc='http://thedataweb.rm.census.gov/ftp/cps_ftp.html#cpsbasic'
-mainloc='main.csv'
+mainloc=basepath+'main.csv'
 mainloc='/Users/austinclemens/Desktop/labor_participation_interactive/labor_participation_interactive/Interactive/main.csv'
+mainpartsloc=basepath+'main_parts.csv'
+mainpartsloc='/Users/austinclemens/Desktop/labor_participation_interactive/labor_participation_interactive/Interactive/main_parts.csv'
 saveloc='/Users/austinclemens/Desktop/'
 months=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
-basepath=os.path.dirname(os.path.abspath(__file__))
+
 
 filename=scrape_newcps()
 data=parse_CPS(filename)
+alldata=master_append(data)
+
+
+def master_append(data):
+	# take data from parse_CPS and append it to the master dataset in main_parts.csv. Load main_parts and return it.
+	df = pd.read_csv('mainpartsloc.csv')
+
+
+
+
+
 
 
 def scrape_newcps():
@@ -44,17 +59,17 @@ def scrape_newcps():
 	zipped=urllib2.urlopen(address)
 	open(basepath+'/temp.zip',"wb").write(zipped.read())
 
-with zipfile.ZipFile(basepath+'/temp.zip') as zf:
-	for member in zf.infolist():
-		words=member.filename.split('/')
-		unzipped=words[0]
-		path=basepath
-		for word in words[:-1]:
-			drive,word=os.path.splitdrive(word)
-			head,word=os.path.split(word)
-			if word in (os.curdir,os.pardir,''): continue
-			path=os.path.join(path,word)
-		zf.extract(member,path)
+	with zipfile.ZipFile(basepath+'/temp.zip') as zf:
+		for member in zf.infolist():
+			words=member.filename.split('/')
+			unzipped=words[0]
+			path=basepath
+			for word in words[:-1]:
+				drive,word=os.path.splitdrive(word)
+				head,word=os.path.split(word)
+				if word in (os.curdir,os.pardir,''): continue
+				path=os.path.join(path,word)
+			zf.extract(member,path)
 
 	os.remove(basepath+'/temp.zip')
 	os.rename(basepath+'/'+unzipped,basepath+'/'+newstring)
@@ -63,23 +78,20 @@ with zipfile.ZipFile(basepath+'/temp.zip') as zf:
 
 
 def parse_CPS(file):
+	# unlike the algo in making_pemlr, this is just going to parse one month - the most recent, and add it to the
+	# main_parts.csv. Then that csv can be passed to format_for_interactive to create the final dataset.
 	master_time=pd.DataFrame([],columns=['year','month','age','total_n','b0','b1','b2','b3','b4','b5','b6','b7'])
 
 	try:
-		location=folder_location+file
-		with open(location,'rb') as csvfile:
+		with open(file,'rb') as csvfile:
 			reader=csv.reader(csvfile)
 			data=[row for row in reader]
 	except:
-		with open(location,'rb') as csvfile:
+		with open(file,'rb') as csvfile:
 			reader = csv.reader(x.replace('\0', '') for x in csvfile)
 			data=[row for row in reader]
 
-	if int(file[4:6])<50:
-		year=2000+int(file[4:6])
-	if int(file[4:6])>49:
-		year=1900+int(file[4:6])
-
+	year=2000+int(file[4:6])
 	month=int(file[6:])
 
 	pdata=[]
