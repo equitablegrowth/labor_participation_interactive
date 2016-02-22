@@ -3,31 +3,38 @@ import csv
 import re
 import zipfile
 import os.path
+import json
 import pandas as pd
 
 basepath=os.path.dirname(os.path.abspath(__file__))
 cpsloc='http://thedataweb.rm.census.gov/ftp/cps_ftp.html#cpsbasic'
 mainloc=basepath+'main.csv'
-mainloc='/Users/austinclemens/Desktop/labor_participation_interactive/labor_participation_interactive/Interactive/main.csv'
+main2loc=basepath+'main2.csv'
 mainpartsloc=basepath+'main_parts.csv'
-mainpartsloc='/Users/austinclemens/Desktop/labor_participation_interactive/labor_participation_interactive/Interactive/main_parts.csv'
-saveloc='/Users/austinclemens/Desktop/'
+gdp_loc=basepath+'gdp.csv'
+rec_loc=basepath+'recessions.csv'
 months=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
-
 
 filename=scrape_newcps()
 data=parse_CPS(filename)
 alldata=master_append(data)
 
+formatted=output_for_interactive(alldata)
+formatted.to_csv(mainloc,index=False)
+
+formatted2=output_for_interactive2(alldata)
+formatted2.to_csv(main2loc,index=False)
+
+scrape_gdp(gdp_loc)
+scrape_recessions(rec_loc)
+
 
 def master_append(data):
-	# take data from parse_CPS and append it to the master dataset in main_parts.csv. Load main_parts and return it.
-	df = pd.read_csv('mainpartsloc.csv')
-
-
-
-
-
+	# take data from parse_CPS and append it to the master dataset in main_parts.csv. Load main_parts, write it to disk, and return it.
+	df = pd.read_csv(mainpartsloc)
+	alldata=data.append(df)
+	alldata.to_csv(mainpartsloc,index=False)
+	return alldata
 
 
 def scrape_newcps():
@@ -53,8 +60,6 @@ def scrape_newcps():
 
 	newdownfinder=re.compile('(http://thedataweb.rm.census.gov/pub/cps/basic/......./%s)' % string)
 	address=newdownfinder.findall(page)[0]
-
-	cpsb8206
 
 	zipped=urllib2.urlopen(address)
 	open(basepath+'/temp.zip',"wb").write(zipped.read())
@@ -91,8 +96,9 @@ def parse_CPS(file):
 			reader = csv.reader(x.replace('\0', '') for x in csvfile)
 			data=[row for row in reader]
 
-	year=2000+int(file[4:6])
-	month=int(file[6:])
+	name=file.split('/')[-1]
+	year=2000+int(name[4:6])
+	month=int(name[6:])
 
 	pdata=[]
 	for row in data:
@@ -187,6 +193,96 @@ def output_for_interactive(parsed):
 	final=pd.DataFrame(final,columns=['age','year','startmonth','endmonth','string','b0','b1','b2','b3','b4','b5','b6','b7'])
 	return final
 
+
+def output_for_interactive2(parsed):
+	# nick [2:58 PM] yeah, <25, 25 to 34, 35 to 44, 45 to 54, (a prime-age one of 25 to 54 would be nice) and 54 plus would be great
+	# this should collapse all months into one year observation but also collapse all ages into 6 age categories:
+	#	<25
+	#	25-34
+	#	35-44
+	#	45-54
+	#	>54
+	#	25-54
+
+	minyear=parsed['year'].min()
+	minmonth=parsed[parsed['year']==minyear]['month'].min()
+	maxyear=parsed['year'].max()
+	maxmonth=parsed[parsed['year']==maxyear]['month'].max()
+	startmonth=(maxmonth+12) % 12 + 1
+
+	currentyear=maxyear
+	final=[]
+	groups=[[0,25],[25,34],[35,44],[45,54],[54,100],[25,54]]
+	group_names=['<25','25-35','35-44','45-54','>54','25-54']
+	while currentyear>=minyear:
+		print currentyear
+		if minmonth==1:
+			sample=parsed[parsed['year']==currentyear]
+		else:
+			sample=parsed[((parsed['year']==currentyear) & (parsed['month']<=maxmonth)) | ((parsed['year']==currentyear-1) & (parsed['month']>=startmonth))]
+
+		for i,age_group in enumerate(groups):
+			age_sample=sample[(sample['age']>=age_group[0]) & (sample['age']<=age_group[1])]
+			age_sample['weighted0']=age_sample['b0']*age_sample['total_n']
+			age_sample['weighted1']=age_sample['b1']*age_sample['total_n']
+			age_sample['weighted2']=age_sample['b2']*age_sample['total_n']
+			age_sample['weighted3']=age_sample['b3']*age_sample['total_n']
+			age_sample['weighted4']=age_sample['b4']*age_sample['total_n']
+			age_sample['weighted5']=age_sample['b5']*age_sample['total_n']
+			age_sample['weighted6']=age_sample['b6']*age_sample['total_n']
+			age_sample['weighted7']=age_sample['b7']*age_sample['total_n']
+
+			total=age_sample['total_n'].sum()
+
+			b0=age_sample['weighted0'].sum()/total
+			b1=age_sample['weighted1'].sum()/total
+			b2=age_sample['weighted2'].sum()/total
+			b3=age_sample['weighted3'].sum()/total
+			b4=age_sample['weighted4'].sum()/total
+			b5=age_sample['weighted5'].sum()/total
+			b6=age_sample['weighted6'].sum()/total
+			b7=age_sample['weighted7'].sum()/total
+
+			final.append([group_names[i],currentyear,startmonth,maxmonth,str(int(startmonth))+'/'+str(int(currentyear-1))+'-'+str(int(maxmonth))+'/'+str(int(currentyear)),b0,b1,b2,b3,b4,b5,b6,b7])
+
+		currentyear=currentyear-1
+
+	final=pd.DataFrame(final,columns=['age','year','startmonth','endmonth','string','b0','b1','b2','b3','b4','b5','b6','b7'])
+	return final
+
+
+def scrape_gdp(gdp_loc):
+	# get the gdp data from FRED and save out as a csv.
+	address='https://api.stlouisfed.org/fred/series/observations?series_id=GDPC1&api_key=f9f6a417fc09f41db58b669007db3ba4&file_type=json&observation_start=1976-01-01&units=pch&frequency=q'
+	source=urllib2.urlopen(address)
+	data=json.load(source)
+	data=data['observations']
+
+	output=[['observation_date','GDPC1_PCH']]
+	for obs in data:
+		output.append([obs['date'],float(obs['value'])])
+
+	with open(gdp_loc,'wb') as csvfile:
+		writer=csv.writer(csvfile)
+		for row in output:
+			writer.writerow(row)
+
+
+def scrape_recessions(rec_loc):
+	# get the recession data from FRED and save out as a csv.
+	address='https://api.stlouisfed.org/fred/series/observations?series_id=USREC&api_key=f9f6a417fc09f41db58b669007db3ba4&file_type=json&observation_start=1976-01-01'
+	source=urllib2.urlopen(address)
+	data=json.load(source)
+	data=data['observations']
+
+	output=[['observation_date','USREC']]
+	for obs in data:
+		output.append([obs['date'],int(obs['value'])])
+
+	with open(rec_loc,'wb') as csvfile:
+		writer=csv.writer(csvfile)
+		for row in output:
+			writer.writerow(row)
 
 
 

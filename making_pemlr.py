@@ -270,6 +270,63 @@ def output_for_interactive(parsed):
 	return final
 
 
+def output_for_interactive2(parsed):
+	# nick [2:58 PM] yeah, <25, 25 to 34, 35 to 44, 45 to 54, (a prime-age one of 25 to 54 would be nice) and 54 plus would be great
+	# this should collapse all months into one year observation but also collapse all ages into 6 age categories:
+	#	<25
+	#	25-34
+	#	35-44
+	#	45-54
+	#	>54
+	#	25-54
+
+	minyear=parsed['year'].min()
+	minmonth=parsed[parsed['year']==minyear]['month'].min()
+	maxyear=parsed['year'].max()
+	maxmonth=parsed[parsed['year']==maxyear]['month'].max()
+	startmonth=(maxmonth+12) % 12 + 1
+
+	currentyear=maxyear
+	final=[]
+	groups=[[0,25],[25,34],[35,44],[45,54],[54,100],[25,54]]
+	group_names=['<25','25-35','35-44','45-54','>54','25-54']
+	while currentyear>=minyear:
+		print currentyear
+		if minmonth==1:
+			sample=parsed[parsed['year']==currentyear]
+		else:
+			sample=parsed[((parsed['year']==currentyear) & (parsed['month']<=maxmonth)) | ((parsed['year']==currentyear-1) & (parsed['month']>=startmonth))]
+
+		for i,age_group in enumerate(groups):
+			age_sample=sample[(sample['age']>=age_group[0]) & (sample['age']<=age_group[1])]
+			age_sample['weighted0']=age_sample['b0']*age_sample['total_n']
+			age_sample['weighted1']=age_sample['b1']*age_sample['total_n']
+			age_sample['weighted2']=age_sample['b2']*age_sample['total_n']
+			age_sample['weighted3']=age_sample['b3']*age_sample['total_n']
+			age_sample['weighted4']=age_sample['b4']*age_sample['total_n']
+			age_sample['weighted5']=age_sample['b5']*age_sample['total_n']
+			age_sample['weighted6']=age_sample['b6']*age_sample['total_n']
+			age_sample['weighted7']=age_sample['b7']*age_sample['total_n']
+
+			total=age_sample['total_n'].sum()
+
+			b0=age_sample['weighted0'].sum()/total
+			b1=age_sample['weighted1'].sum()/total
+			b2=age_sample['weighted2'].sum()/total
+			b3=age_sample['weighted3'].sum()/total
+			b4=age_sample['weighted4'].sum()/total
+			b5=age_sample['weighted5'].sum()/total
+			b6=age_sample['weighted6'].sum()/total
+			b7=age_sample['weighted7'].sum()/total
+
+			final.append([group_names[i],currentyear,startmonth,maxmonth,str(int(startmonth))+'/'+str(int(currentyear-1))+'-'+str(int(maxmonth))+'/'+str(int(currentyear)),b0,b1,b2,b3,b4,b5,b6,b7])
+
+		currentyear=currentyear-1
+
+	final=pd.DataFrame(final,columns=['age','year','startmonth','endmonth','string','b0','b1','b2','b3','b4','b5','b6','b7'])
+	return final
+
+
 # with open('/Users/austinclemens/Desktop/out4.csv','rU') as csvfile:
 # 	reader=csv.reader(csvfile)
 # 	data=[row for row in reader]
