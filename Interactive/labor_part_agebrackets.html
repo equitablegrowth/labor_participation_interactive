@@ -1,0 +1,109 @@
+<!-- labor_part_history.html -->
+
+<html>
+
+<head>
+	<title>History of Labor Participation by Age Bracket</title>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/snap.svg/0.4.1/snap.svg-min.js"></script>
+	<style>
+		@import url(https://fonts.googleapis.com/css?family=Lato:400,700);
+		body {margin-top:50px;margin-left:50px;font-family: 'Lato'; font-weight:300; line-height:140%; padding-bottom: 100px;}
+		select{margin:0px;}
+
+		.graph2{max-width:1045px}
+		.hed{font-family:'Lato';font-size:22px;font-weight:700;}
+		.dek{font-family:'Lato';font-size:17px;margin-bottom:20px;}
+		.note{font-family:'Lato';font-size:11px;margin-top:20px;line-height:1.1;}	
+	</style>
+
+</head>
+
+<body>
+
+	<div class='graph2'>
+		<div class='hed'>A history of labor market participation by age bracket</div>
+		<div class='dek'>Choose an age bracket to see how labor participation within that bracket has changed over time. Click on an area of the chart to isolate that category.</div>
+		<select name="select">
+			<option value="value1"><25 years old</option> 
+			<option value="value2" selected>25-34 years old</option>
+			<option value="value3">35-44 years old</option>
+			<option value="value3">45-54 years old</option>
+			<option value="value3">>54 years old</option>
+			<option value="value3">Prime age (25-54)</option>
+		</select>
+
+		<svg id="graph2" viewbox='0,-15,1045,500' ></svg>
+		<!-- <div class='note'>Note: This chart is updated monthly. Data is from the Census Bureau's Current Population Survey. Basic monthly data are used and all months are averaged together for each year. The survey was revised in 1989 and 1994; changes to both question wording and survey weights result in discontinuities in these years that may not be attributable to real changes in the economy. Notably, it was not possible to select 'retired' before 1989. GDP data is: US. Bureau of Economic Analysis, Gross Domestic Product [GDP], retrieved from FRED, Federal Reserve Bank of St. Louis https://research.stlouisfed.org/fred2/series/GDP.</div> -->
+	</div>
+
+</body>
+
+<script defer>
+var g2 = Snap('#graph2')
+var color_scale=['#67c2a5','#fc8d62','#8da0cb','#e78ac3','#a6d854','#ffd92f','#e5c494','#b3b3b3']
+basekey_g2()
+
+loadmain2('main2.csv',function(main2){
+	console.log(main2)
+	max_year=main[0][1]
+	min_year=1976
+	startmonth=main[0][2]
+	endmonth=main[0][3]
+	for(var i=0;i<main.length;i++){
+		if(main[i][1]>max_year){max_year=main[i][1]}
+	}
+})
+
+
+function loadmain2(file,callback){
+	var rawFile = new XMLHttpRequest();
+	rawFile.open("GET", file);
+	rawFile.onreadystatechange = function () {
+		if(rawFile.readyState === 4) {
+			if(rawFile.status === 200 || rawFile.status == 0) {
+				var text = rawFile.responseText;
+				text=text.split('\n')
+
+				for(var i=0;i<text.length;i++){
+					text[i]=text[i].split(',')
+				}
+
+				main=[]
+				for(var i=1;i<text.length;i++){
+					main.push([text[i][0],parseInt(text[i][1]),parseInt(text[i][2]),parseInt(text[i][3]),text[i][4],parseFloat(text[i][5]),parseFloat(text[i][6]),parseFloat(text[i][7]),parseFloat(text[i][8]),parseFloat(text[i][9]),parseFloat(text[i][10]),parseFloat(text[i][11]),parseFloat(text[i][12])])
+				}
+
+				callback(main)
+			}
+		}
+	}
+	rawFile.send(null);
+}
+
+
+function basekey_g2(){
+	var ft2=g2.rect(80,5,20,10).attr({fill:color_scale[0],'shape-rendering':'crispEdges',cursor:'pointer'})
+	var pt2=g2.rect(243.5,5,20,10).attr({fill:color_scale[1],'shape-rendering':'crispEdges',cursor:'pointer'})
+	var unemp2=g2.rect(407,5,20,10).attr({fill:color_scale[2],'shape-rendering':'crispEdges',cursor:'pointer'})
+	var disabled2=g2.rect(570.5,5,20,10).attr({fill:color_scale[3],'shape-rendering':'crispEdges',cursor:'pointer'})
+	var carer2=g2.rect(80,25,20,10).attr({fill:color_scale[4],'shape-rendering':'crispEdges',cursor:'pointer'})
+	var retired2=g2.rect(243.5,25,20,10).attr({fill:color_scale[5],'shape-rendering':'crispEdges',cursor:'pointer'})
+	var student2=g2.rect(407,25,20,10).attr({fill:color_scale[6],'shape-rendering':'crispEdges',cursor:'pointer'})
+	var other2=g2.rect(570.5,25,20,10).attr({fill:color_scale[7],'shape-rendering':'crispEdges',cursor:'pointer'})
+
+	var fttext2=g2.text(105,10,'Full-time employed').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
+	var fttext2=g2.text(268.5,10,'Part-time employed').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
+	var fttext2=g2.text(432,10,'Unemployed').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
+	var fttext2=g2.text(595,10,'Retired').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
+	var fttext2=g2.text(105,30,'Disabled').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
+	var fttext2=g2.text(268.5,30,'Carer').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
+	var fttext2=g2.text(432,30,'Student').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
+	var fttext2=g2.text(595,30,'Other').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
+}
+
+
+
+
+</script>
+
+</html>

@@ -12,8 +12,9 @@
 		.graph1{max-width:745px}
 		.hed{font-family:'Lato';font-size:22px;font-weight:700;}
 		.dek{font-family:'Lato';font-size:17px;margin-bottom:20px;}
-		.note{font-family:'Lato';font-size:11px;margin-top:20px;line-height:1.1;}		
+		.note{font-family:'Lato';font-size:11px;margin-top:20px;line-height:1.1;}	
 	</style>
+
 </head>
 
 <body>
@@ -21,7 +22,7 @@
 	<div class='graph1'>
 		<div class='hed'>An interactive look at participation in the labor force by age</div>
 		<div class='dek'>Click an area on the chart to isolate that category. Slide along the GDP growth graph under the chart to look at a different time period.</div>
-		<svg id="graph1" viewbox='0,-50,745,830' ></svg>
+		<svg id="graph1" viewbox='0,-85,745,865' ></svg>
 		<div class='note'>Note: This chart is updated monthly. Data is from the Census Bureau's Current Population Survey. Basic monthly data are used and all months are averaged together for each year. The survey was revised in 1989 and 1994; changes to both question wording and survey weights result in discontinuities in these years that may not be attributable to real changes in the economy. Notably, it was not possible to select 'retired' before 1989. GDP data is: US. Bureau of Economic Analysis, Gross Domestic Product [GDP], retrieved from FRED, Federal Reserve Bank of St. Louis https://research.stlouisfed.org/fred2/series/GDP.</div>
 	</div>
 
@@ -35,9 +36,10 @@ var gmin=5
 var gmax=13
 var gclicked=0
 var gplaying=0
+var lockout=0
 
 loadmain('main.csv',function(main){
-	max_year=2015
+	max_year=main[0][1]
 	min_year=1976
 	startmonth=main[0][2]
 	endmonth=main[0][3]
@@ -53,6 +55,24 @@ loadmain('main.csv',function(main){
 	
 })
 
+var showmetext=g1.text(84,-74,'WHAT IS THIS?').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'text-before-edge','font-size':'14px',fill:'#999'})
+var showmerect=g1.rect(80,-75,105,20,3,3).attr({'stroke':'#cccccc','stroke-width':'1px',fill:'white','fill-opacity':0,cursor:'pointer'})
+showmerect.click(graph_intro)
+
+
+function graph_intro(){
+	if(lockout==0){
+		lockout=1
+		var cover=g1.rect(5,-85,1000,1000).attr({fill:'#cccccc',opacity:.5})
+		var cwindow=g1.rect(500,200,100,100).attr({fill:'black'})
+		cover.attr({clip:cwindow})
+
+	}
+
+
+	// function redraw_g1(year,newdraw,min,max){
+}
+
 function base_g1(){
 	// draw the axes and labels for graph 1
 	// ticks on the x-axis and y-axis dotted lines
@@ -61,12 +81,12 @@ function base_g1(){
 
 	for(var i=0;i<ages.length;i++){
 		var tick=g1.line(80+(i*163.5),620,80+(i*163.5),626).attr({stroke:'black','stroke-width':1,'shape-rendering':'crispEdges',id:'base'})
-		var ticktext=g1.text(80+(i*163.5),625,ages[i]).attr({'font-family':'Lato','text-anchor':'middle','dominant-baseline':'text-before-edge','font-size':'17px',id:'base'})
+		var ticktext=g1.text(80+(i*163.5),629,ages[i]).attr({'font-family':'Lato','text-anchor':'middle','dominant-baseline':'text-before-edge','font-size':'17px',id:'base'})
 	}
 
 	// var axislabel=g1.text(80+(2*163.5),655,'Age').attr({'font-family':'Lato','text-anchor':'middle','dominant-baseline':'text-before-edge','font-size':'18px','font-weight':700})
-	var ticktext=g1.text(70+(0*163.5),641,'years old').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'text-before-edge','font-size':'17px',id:'base'})
-	var ticktext=g1.text(90+(4*163.5),641,'years old').attr({'font-family':'Lato','text-anchor':'end','dominant-baseline':'text-before-edge','font-size':'17px',id:'base'})
+	var ticktext=g1.text(70+(0*163.5),645,'years old').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'text-before-edge','font-size':'17px',id:'base'})
+	var ticktext=g1.text(90+(4*163.5),645,'years old').attr({'font-family':'Lato','text-anchor':'end','dominant-baseline':'text-before-edge','font-size':'17px',id:'base'})
 
 	// x grid lines and labels on the y-axis
 	var xaxis=g1.line(70,620,734.5,620).attr({stroke:'black','stroke-width':1,'shape-rendering':'crispEdges',id:'base',id2:'line'})
@@ -130,9 +150,9 @@ function year_slider(){
 	var slider_label2=g1.text(54,731,'growth').attr({'font-family':'Lato','text-anchor':'end','dominant-baseline':'central','font-size':'14px'})
 	var slider_box=g1.rect(60,710,650,30).attr({fill:'none','stroke-width':1,'stroke':'#cccccc','shape-rendering':'crispEdges'})
 	var selected_width=650/(main.length/61)
-	playbutton=g1.path('M728,718L736,725L728,732,L728,718').attr({'stroke-width':1,stroke:'#cccccc',fill:'none'})
-	stopbutton=g1.rect(725,720,10,10).attr({'stroke-width':1,stroke:'#cccccc',fill:'none',opacity:0})
-	var controlbutton=g1.circle(730,725,12).attr({fill:'#ddd',stroke:'#cccccc','stroke-width':1,'fill-opacity':0,cursor:'pointer'})
+	playbutton=g1.path('M726,718L734,725L726,732,L726,718').attr({'stroke-width':1,stroke:'#cccccc',fill:'none'})
+	stopbutton=g1.rect(723,720,10,10).attr({'stroke-width':1,stroke:'#cccccc',fill:'none',opacity:0})
+	var controlbutton=g1.circle(728,725,12).attr({fill:'#ddd',stroke:'#cccccc','stroke-width':1,'fill-opacity':0,cursor:'pointer'})
 	controlbutton.click(playredraw)
 	controlbutton.hover(function(){this.attr({'fill-opacity':.3})},function(){this.attr({'fill-opacity':0})})
 
@@ -209,8 +229,10 @@ function year_slider(){
 			// draw the red lines to indicate changes to the CPS
 			var x_value=60+((1994-start)/range)*gdp_portion
 			var red1=g1.line(x_value,710,x_value,740).attr({'stroke-width':1,'stroke':'red'})
+			// red1.hover(tooltip1on,tooltip1off)
 			var x_value=60+((1989-start)/range)*gdp_portion
 			var red2=g1.line(x_value,710,x_value,740).attr({'stroke-width':1,'stroke':'red'})
+			// red2.hover(tooltip2on,tooltip2off)
 			
 			// draw the slider in here so that it draws after all the recession blocks
 			selected=g1.rect(710-selected_width,705,selected_width,40).attr({fill:'#333333','stroke-width':1,'stroke':'black','shape-rendering':'crispEdges','fill-opacity':.1,cursor:'move'})
@@ -225,8 +247,6 @@ function year_slider(){
 					for(var i=0;i<main.length/61;i++){
 						breaks.push(breaks[breaks.length-1]+selected_width)
 					}
-
-					console.log(breaks)
 
 					snap=closest(breaks,newx)
 					this.animate({x:snap},50)
@@ -245,6 +265,25 @@ function year_slider(){
 			})
 		})
 	})
+}
+
+function tooltip1on(e){
+	console.log(e.clientX,e.clientY)
+	g1.rect(e.clientX+3,e.clientY-200,120,80,3,3).attr({fill:'black',opacity:.5,type:'tooltip'})
+	// "In 1994, the CPS survey underwent a number of alterations. One of these alterations changed how respondents designate themselves as either retired or carers/home-makers. Consequently, many respondents who we would usually consider retired instead classified themselves as carers."
+
+}
+
+function tooltip1off(){
+	g1.selectAll()
+}
+
+function tooltip2on(){
+	// "Prior to 1989, it was not possible for respondents to choose 'retired' as an option. Instead, the 'other' option was designated 'other (including retired).' Consequently, if you look at the area chart prior to this date, you will see that 'other' percentages are high for those over 50."
+}
+
+function tooltip2off(){
+
 }
 
 function playredraw(){
