@@ -22,7 +22,7 @@
 	<div class='graph1'>
 		<div class='hed'>An interactive look at participation in the labor force by age</div>
 		<div class='dek'>Click an area on the chart to isolate that category. Slide along the GDP growth graph under the chart to look at a different time period.</div>
-		<svg id="graph1" viewbox='0,-85,745,865' ></svg>
+		<svg id="graph1" viewbox='0,-45,745,825' ></svg>
 		<div class='note'>Note: This chart is updated monthly. Data is from the Census Bureau's Current Population Survey. Basic monthly data are used and all months are averaged together for each year. The survey was revised in 1989 and 1994; changes to both question wording and survey weights result in discontinuities in these years that may not be attributable to real changes in the economy. Notably, it was not possible to select 'retired' before 1989. GDP data is: US. Bureau of Economic Analysis, Gross Domestic Product [GDP], retrieved from FRED, Federal Reserve Bank of St. Louis https://research.stlouisfed.org/fred2/series/GDP.</div>
 	</div>
 
@@ -55,9 +55,9 @@ loadmain('main.csv',function(main){
 	
 })
 
-var showmetext=g1.text(84,-74,'WHAT IS THIS?').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'text-before-edge','font-size':'14px',fill:'#999'})
-var showmerect=g1.rect(80,-75,105,20,3,3).attr({'stroke':'#cccccc','stroke-width':'1px',fill:'white','fill-opacity':0,cursor:'pointer'})
-showmerect.click(graph_intro)
+// var showmetext=g1.text(84,-74,'WHAT IS THIS?').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'text-before-edge','font-size':'14px',fill:'#999'})
+// var showmerect=g1.rect(80,-75,105,20,3,3).attr({'stroke':'#cccccc','stroke-width':'1px',fill:'white','fill-opacity':0,cursor:'pointer'})
+// showmerect.click(graph_intro)
 
 
 function graph_intro(){
@@ -94,7 +94,7 @@ function base_g1(){
 	var x40=g1.line(70,380,734,380).attr({stroke:'black','stroke-width':1,'shape-rendering':'crispEdges',id:'base',opacity:.2,id2:'line'})
 	var x60=g1.line(70,260,734,260).attr({stroke:'black','stroke-width':1,'shape-rendering':'crispEdges',id:'base',opacity:.2,id2:'line'})
 	var x80=g1.line(70,140,734,140).attr({stroke:'black','stroke-width':1,'shape-rendering':'crispEdges',id:'base',opacity:.2,id2:'line'})
-	// var x100=g1.line(70,20,734,20).attr({stroke:'black','stroke-width':1,'shape-rendering':'crispEdges',id:'base',opacity:.2,id2:'line'})
+	var x100=g1.line(70,20,734,20).attr({stroke:'black','stroke-width':1,'shape-rendering':'crispEdges',id:'base',opacity:.2,id2:'line'})
 
 	var x20=g1.line(70,500,80,500).attr({stroke:'black','stroke-width':1,'shape-rendering':'crispEdges',id:'base'})
 	var x40=g1.line(70,380,80,380).attr({stroke:'black','stroke-width':1,'shape-rendering':'crispEdges',id:'base'})

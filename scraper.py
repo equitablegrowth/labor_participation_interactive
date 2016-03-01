@@ -213,7 +213,7 @@ def output_for_interactive2(parsed):
 	currentyear=maxyear
 	final=[]
 	groups=[[0,25],[25,34],[35,44],[45,54],[54,100],[25,54]]
-	group_names=['<25','25-35','35-44','45-54','>54','25-54']
+	group_names=['<25','25-34','35-44','45-54','>54','25-54']
 	while currentyear>=minyear:
 		print currentyear
 		if minmonth==1:
