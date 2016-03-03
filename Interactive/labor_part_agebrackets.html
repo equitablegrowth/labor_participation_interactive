@@ -7,7 +7,7 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/snap.svg/0.4.1/snap.svg-min.js"></script>
 	<style>
 		@import url(https://fonts.googleapis.com/css?family=Lato:400,700);
-		body {margin-top:50px;margin-left:50px;font-family: 'Lato'; font-weight:300; line-height:140%; padding-bottom: 100px;}
+		body {font-family: 'Lato'; font-weight:300; line-height:140%; padding-bottom: 100px;}
 
 		.subconstraint{max-width:845px;}
 		.graph2{max-width:1045px}
@@ -46,7 +46,7 @@
 
 	<div id='constraint' class='graph2'>
 		<svg id="graph2" viewbox='0,-15,1045,565' ></svg>
-		<div class='note'>Note: This chart is updated monthly. Data is from the Census Bureau's Current Population Survey. Basic monthly data are used and all months are averaged together for each year. The survey was revised in 1989 and 1994; changes to both question wording and survey weights result in discontinuities in these years that may not be attributable to real changes in the economy. Notably, it was not possible to select 'retired' before 1989. GDP data is: US. Bureau of Economic Analysis, Gross Domestic Product [GDP], retrieved from FRED, Federal Reserve Bank of St. Louis https://research.stlouisfed.org/fred2/series/GDP.</div>
+		<div class='note'>Note: This chart is updated monthly. Data is from the Census Bureau's Current Population Survey. Basic monthly data are used and all months are averaged together for each year. The survey was revised in 1989 and 1994; changes to both question wording and survey weights result in discontinuities in these years that may not be attributable to real changes in the economy. Recession data from: Federal Reserve Bank of St. Louis, NBER based Recession Indicators for the United States from the Period following the Peak through the Trough [USREC], retrieved from FRED, Federal Reserve Bank of St. Louis https://research.stlouisfed.org/fred2/series/USREC, March 1, 2016.</div>
 	</div>
 
 </body>
@@ -59,6 +59,9 @@ var gclicked=0
 var svgel=document.getElementById('graph2')
 var pt=svgel.createSVGPoint()
 var working=0
+var tbracket_data
+var max=13
+var min=5
 
 function cursorPoint(evt){
 	pt.x=evt.clientX;pt.y=evt.clientY
@@ -97,7 +100,6 @@ function loadmain2(file,callback){
 				for(var i=1;i<text.length;i++){
 					main.push([text[i][0],parseInt(text[i][1]),parseInt(text[i][2]),parseInt(text[i][3]),text[i][4],parseFloat(text[i][5]),parseFloat(text[i][6]),parseFloat(text[i][7]),parseFloat(text[i][8]),parseFloat(text[i][9]),parseFloat(text[i][10]),parseFloat(text[i][11]),parseFloat(text[i][12])])
 				}
-
 				callback(main)
 			}
 		}
@@ -139,7 +141,7 @@ function basegraph_g2(wide){
 	}
 
 	g2ybounds=[55,g2height-125]
-	g2xbounds=[50,g2width-40]
+	g2xbounds=[50,g2width-60]
 
 	// red cps change lines
 	g2.line(xvalue(1994,55),yvalue(1),xvalue(1994,55),yvalue(0)).attr({'stroke-width':1,'stroke':'red','shape-rendering':'crispEdges',type:'front'})
@@ -159,7 +161,7 @@ function basegraph_g2(wide){
 
 	// draw axes - begin at about y=50, nothing but %s on the y-axis so you can start pretty tight
 	g2.line(50,55,50,g2height-125).attr({'stroke-width':1,'stroke':'black','shape-rendering':'crispEdges',type:'front'})
-	g2.line(50,g2height-125,g2width-40,g2height-125).attr({'stroke-width':1,'stroke':'black','shape-rendering':'crispEdges',type:'front'})
+	g2.line(50,g2height-125,g2width-60,g2height-125).attr({'stroke-width':1,'stroke':'black','shape-rendering':'crispEdges',type:'front'})
 
 	var temp=Math.floor(maxtime)
 	while(temp>mintime+5){
@@ -168,8 +170,8 @@ function basegraph_g2(wide){
 		g2.text(xvalue(Math.floor(temp)),g2ybounds[1]+23,Math.floor(temp)).attr({'font-face':'Lato','text-anchor':'middle','font-size':'18px'})
 	}
 
-	var shade=g2.rect(139,g2ybounds[1]+43,47,14).attr({fill:'#ddd'})
-	var slider_label2=g2.text(g2xbounds[0],g2ybounds[1]+55,['recessions are shaded, ','red lines',' indicate a major change to the CPS survey']).attr({'font-family':'Lato','text-anchor':'start','font-size':'14px'})
+	var shade=g2.rect(142,g2ybounds[1]+43,47,14).attr({fill:'#ddd'})
+	var slider_label2=g2.text(g2xbounds[0],g2ybounds[1]+55,['Recessions are shaded, ','red lines',' indicate a major change to the CPS survey']).attr({'font-family':'Lato','text-anchor':'start','font-size':'14px'})
 	slider_label2.selectAll("tspan")[1].attr({fill:'red'})
 
 	// draw recession shading
@@ -199,13 +201,13 @@ function basegraph_g2(wide){
 function drawdata_g2(bracket,newg,min,max){
 	working=1
 	// bracket = 0,1,2,3,4,5
-	bracketlist=['<25','25-35','35-44','45-54','>54','25-54']
+	bracketlist=['<25','25-34','35-44','45-54','>54','25-54']
 
 	// look at all this fancy no-loop shit
 	var bracket_data=g2data.filter(function(obs){
 		return obs[0]===bracketlist[bracket]
 	})
-	var tbracket_data=bracket_data.map(function(obs){
+	tbracket_data=bracket_data.map(function(obs){
 		return [obs[0],obs[1],obs[2],obs[3],obs[4],yvalue(obs[5]),yvalue(obs[6]),yvalue(obs[7]),yvalue(obs[8]),yvalue(obs[9]),yvalue(obs[10]),yvalue(obs[11]),yvalue(obs[12])]
 	})
 
@@ -276,8 +278,8 @@ function drawdata_g2(bracket,newg,min,max){
 
 	for(var i=0;i<path_list.length;i++){
 		if(newg==1){
-			var areag2=g2.path(path_list[i]).attr({fill:color_scale[i],type:'grouppath',column:i+5})
-			var areafake=g2.path(path_list[i]).attr({fill:'black',type:'front2',column:i+5,opacity:0})
+			var areag2=g2.path(path_list[i]).attr({fill:color_scale[i],type:'grouppath',column:i+5,cursor:'pointer'})
+			var areafake=g2.path(path_list[i]).attr({fill:color_scale[i],type:'front2',column:i+5,opacity:0,cursor:'pointer'})
 			areafake.hover(highlight_area,unhighlight_area)
 			areafake.click(g2clickredraw)
 			working=0
@@ -285,6 +287,7 @@ function drawdata_g2(bracket,newg,min,max){
 			if(i==path_list.length-1){
 				g2.select("path[type='grouppath'][column='"+(i+5)+"']").animate({path:path_list[i]},1000,function(){
 					working=0
+					update_per()
 				})
 			} else{
 				g2.select("path[type='grouppath'][column='"+(i+5)+"']").animate({path:path_list[i]},1000)
@@ -314,16 +317,20 @@ function drawdata_g2(bracket,newg,min,max){
 }
 
 function g2clickredraw(ev){
-	// unhighlight_area(ev)
-	a=document.getElementById('g2select').value
-	if(gclicked==0){
-		item=Snap(ev.target)
-		column=item.attr('column')
-		gclicked=1
-		drawdata_g2(parseInt(a),0,parseInt(column),parseInt(column))
-	} else if(gclicked==1){
-		gclicked=0
-		drawdata_g2(parseInt(a),0,5,13)
+	if(working==0){
+		// unhighlight_area(ev)
+		a=document.getElementById('g2select').value
+		if(gclicked==0){
+			item=Snap(ev.target)
+			column=item.attr('column')
+			gclicked=1
+			drawdata_g2(parseInt(a),0,parseInt(column),parseInt(column))
+			min=parseInt(column)
+			max=parseInt(column)
+		} else if(gclicked==1){
+			gclicked=0
+			drawdata_g2(parseInt(a),0,5,13)
+		}
 	}
 }
 
@@ -345,7 +352,7 @@ function reversex(coord){
 
 function g2redraw(){
 	a=document.getElementById('g2select').value
-	drawdata_g2(parseInt(a),0,5,13)
+	drawdata_g2(parseInt(a),0,min,max)
 }
 
 function readcsv(file,dateflag,callback) {
@@ -364,14 +371,20 @@ function readcsv(file,dateflag,callback) {
 				// return years only
 				if(dateflag==0){
 					for(var i=1;i<text.length;i++){
-						final.push([parseInt(text[i][0].split('-')[0]),parseFloat(text[i][1])])
+						a=[parseInt(text[i][0].split('-')[0]),parseFloat(text[i][1])]
+						if(!isNaN(a[0]) & !isNaN(a[1])){
+							final.push(a)
+						}
 					}
 				}
 
 				// convert months to fractions and return years+(months-1)/12
 				if(dateflag==1){
 					for(var i=1;i<text.length;i++){
-						final.push([parseFloat(text[i][0].split('-')[0])+(parseFloat(text[i][0].split('-')[1])-1)/12,parseFloat(text[i][1])])
+						a=[parseFloat(text[i][0].split('-')[0])+(parseFloat(text[i][0].split('-')[1])-1)/12,parseFloat(text[i][1])]
+						if(!isNaN(a[0]) & !isNaN(a[1])){
+							final.push(a)
+						}
 					}
 				}
 				callback(final)
@@ -404,34 +417,68 @@ function unhighlight_area(ev){
 function mousetrack(){
 	var mouselinex=g2.line(xvalue(2009),g2ybounds[0],xvalue(2009),g2ybounds[1]-.5).attr({stroke:'#000','stroke-width':1,type:'front','shape-rendering':'crispEdges','stroke-dasharray':[8,8]})
 	var mouseliney=g2.line(g2xbounds[0],yvalue(.6),g2xbounds[1],yvalue(.6)).attr({stroke:'#000','stroke-width':1,type:'front','shape-rendering':'crispEdges','stroke-dasharray':[8,8]})
-	var mouse_year=g2.text(xvalue(2009)+4,g2ybounds[0]-2,'2009').attr({'font-face':'Lato','text-anchor':'middle','font-size':'18px',type:'front'})
-	var mouse_percent=g2.text(g2xbounds[1]+3,yvalue(.6)+5,'60%').attr({'font-face':'Lato','text-anchor':'start','font-size':'18px',type:'front'})
+	// var mouse_year=g2.text(xvalue(2009)+4,g2ybounds[0]-2,'2009').attr({'font-face':'Lato','text-anchor':'middle','font-size':'18px',type:'front'})
+	// var mouse_percent=g2.text(g2xbounds[1]+3,yvalue(.6)+5,'60%').attr({'font-face':'Lato','text-anchor':'start','font-size':'18px',type:'front'})
+	var mousebox=g2.rect(Math.round(xvalue(2009)+10),Math.round(yvalue(.6)-60),50,50).attr({fill:'white','stroke-width':1,'stroke':'black','shape-rendering':'crispEdges',type:'front2'})
+	mbox1=g2.text(xvalue(2009)+35,yvalue(.6)-39,'2009').attr({'font-face':'Lato','text-anchor':'middle','font-size':'18px',type:'front2'})
+	var year=2009
+	var mouse_data=tbracket_data.filter(function(obs){
+		return obs[1]===year
+	})
+	var per=(reversey(mouse_data[0][5])).toFixed(0)+'%'
+	mbox2=g2.text(xvalue(2009)+35,yvalue(.6)-18,per).attr({'font-face':'Lato','text-anchor':'middle','font-size':'18px',type:'front2',fill:color_scale[0],'font-weight':'bold'})
 	g2.append(g2.selectAll("[type='front']"))
 	g2.append(g2.selectAll("[type='front2']"))
 
-	function OnMouseMove(loc,callback) {
+	test=function OnMouseMove(loc,evt,callback) {
 		if(working==0){
-			xloc=loc['x']
-			yloc=loc['y']
+			var tempxloc=Math.round(loc['x'])
+			var tempyloc=Math.round(loc['y'])
 
-			if(xloc>=g2xbounds[0] & xloc<=g2xbounds[1] & yloc>=g2ybounds[0] & yloc<=g2ybounds[1]){
+			if(tempxloc>=g2xbounds[0] & tempxloc<=g2xbounds[1] & tempyloc>=g2ybounds[0] & tempyloc<=g2ybounds[1]){
+				xloc=Math.round(loc['x'])
+				yloc=Math.round(loc['y'])
+				var item=Snap(evt.target)
 				mouselinex.attr({x1:xloc,x2:xloc})
 				mouseliney.attr({y1:yloc,y2:yloc})
+				mousebox.attr({x:xloc+10,y:yloc-60})
 				var year=reversex(xloc)
-				var percent=reversey(yloc)+'%'
-				if(xloc<g2xbounds[0]+20){xloc=g2xbounds[0]+20}
-				mouse_year.attr({text:year,x:xloc})
-				mouse_percent.attr({text:percent,y:yloc+5})
+
+				var mouse_data=tbracket_data.filter(function(obs){
+					return obs[1]===year
+				})
+				per=(reversey(mouse_data[0][item.attr('column')])).toFixed(0)+'%'
+
+				if(per=='NaN%'){per='-'}
+
+				mbox1.attr({text:year,x:xloc+35,y:yloc-39})
+				mbox2.attr({text:per,y:yloc-18,x:xloc+35,fill:item.attr('fill')})
 				callback()
 			}
 		}
 	}
+
 	svgel.addEventListener('mousemove',function(evt){
 		var loc=cursorPoint(evt)
-		OnMouseMove(loc,function(){
+		test(loc,evt,function(){
 			g2.append(g2.selectAll("[type='front2']"))
 		})
 	})
+}
+
+function update_per(){
+	var item=Snap.getElementByPoint(xloc,yloc)
+	var year=reversex(xloc)
+
+	var mouse_data=tbracket_data.filter(function(obs){
+		return obs[1]===year
+	})
+	per=(reversey(mouse_data[0][item.attr('column')])).toFixed(0)+'%'
+
+	if(per=='NaN%'){per='-'}
+
+	mbox1.attr({text:year})
+	mbox2.attr({text:per,fill:item.attr('fill')})
 }
 
 </script>

@@ -7,7 +7,7 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/snap.svg/0.4.1/snap.svg-min.js"></script>
 	<style>
 		@import url(https://fonts.googleapis.com/css?family=Lato:400,700);
-		body {margin-top:50px;margin-left:50px;font-family: 'Lato'; font-weight:300; line-height:140%; padding-bottom: 100px;}
+		body {font-family: 'Lato'; font-weight:300; line-height:140%; padding-bottom: 100px;}
 
 		.graph1{max-width:745px}
 		.hed{font-family:'Lato';font-size:22px;font-weight:700;}
@@ -23,7 +23,7 @@
 		<div class='hed'>An interactive look at participation in the labor force by age</div>
 		<div class='dek'>Click an area on the chart to isolate that category. Slide along the GDP growth graph under the chart to look at a different time period.</div>
 		<svg id="graph1" viewbox='0,-45,745,825' ></svg>
-		<div class='note'>Note: This chart is updated monthly. Data is from the Census Bureau's Current Population Survey. Basic monthly data are used and all months are averaged together for each year. The survey was revised in 1989 and 1994; changes to both question wording and survey weights result in discontinuities in these years that may not be attributable to real changes in the economy. Notably, it was not possible to select 'retired' before 1989. GDP data is: US. Bureau of Economic Analysis, Gross Domestic Product [GDP], retrieved from FRED, Federal Reserve Bank of St. Louis https://research.stlouisfed.org/fred2/series/GDP.</div>
+		<div class='note'>Note: This chart is updated monthly. Data is from the Census Bureau's Current Population Survey. Basic monthly data are used and all months are averaged together for each year. The survey was revised in 1989 and 1994; changes to both question wording and survey weights result in discontinuities in these years that may not be attributable to real changes in the economy. GDP data from: US. Bureau of Economic Analysis, Gross Domestic Product [GDP], retrieved from FRED, Federal Reserve Bank of St. Louis https://research.stlouisfed.org/fred2/series/GDP. Recession data from: Federal Reserve Bank of St. Louis, NBER based Recession Indicators for the United States from the Period following the Peak through the Trough [USREC], retrieved from FRED, Federal Reserve Bank of St. Louis https://research.stlouisfed.org/fred2/series/USREC, March 1, 2016.</div>
 	</div>
 
 </body>
@@ -37,8 +37,23 @@ var gmax=13
 var gclicked=0
 var gplaying=0
 var lockout=0
+var g1xbounds=[80,734.5]
+var g1ybounds=[20,620]
+var g1svgel=document.getElementById('graph1')
+var g1pt=g1svgel.createSVGPoint()
+var cbracket
+
+function g1cursorPoint(evt){
+	g1pt.x=evt.clientX;g1pt.y=evt.clientY
+	return g1pt.matrixTransform(g1svgel.getScreenCTM().inverse())
+}
 
 loadmain('main.csv',function(main){
+
+	cbracket=main.map(function(obs){
+		return [obs[0],obs[1],obs[2],obs[3],obs[4],g1yvalue(obs[5]),g1yvalue(obs[6]),g1yvalue(obs[7]),g1yvalue(obs[8]),g1yvalue(obs[9]),g1yvalue(obs[10]),g1yvalue(obs[11]),g1yvalue(obs[12])]
+	})
+
 	max_year=main[0][1]
 	min_year=1976
 	startmonth=main[0][2]
@@ -48,30 +63,12 @@ loadmain('main.csv',function(main){
 	}
 	current_slide_year=max_year
 
-	redraw_g1(current_slide_year,1,5,13)
+	drawdata_g1(current_slide_year,1,5,13)
 	base_g1()
 	basekey_g1()
 	year_slider()
-	
+	mousetrack()
 })
-
-// var showmetext=g1.text(84,-74,'WHAT IS THIS?').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'text-before-edge','font-size':'14px',fill:'#999'})
-// var showmerect=g1.rect(80,-75,105,20,3,3).attr({'stroke':'#cccccc','stroke-width':'1px',fill:'white','fill-opacity':0,cursor:'pointer'})
-// showmerect.click(graph_intro)
-
-
-function graph_intro(){
-	if(lockout==0){
-		lockout=1
-		var cover=g1.rect(5,-85,1000,1000).attr({fill:'#cccccc',opacity:.5})
-		var cwindow=g1.rect(500,200,100,100).attr({fill:'black'})
-		cover.attr({clip:cwindow})
-
-	}
-
-
-	// function redraw_g1(year,newdraw,min,max){
-}
 
 function base_g1(){
 	// draw the axes and labels for graph 1
@@ -89,13 +86,7 @@ function base_g1(){
 	var ticktext=g1.text(90+(4*163.5),645,'years old').attr({'font-family':'Lato','text-anchor':'end','dominant-baseline':'text-before-edge','font-size':'17px',id:'base'})
 
 	// x grid lines and labels on the y-axis
-	var xaxis=g1.line(70,620,734.5,620).attr({stroke:'black','stroke-width':1,'shape-rendering':'crispEdges',id:'base',id2:'line'})
-	var x20=g1.line(70,500,734,500).attr({stroke:'black','stroke-width':1,'shape-rendering':'crispEdges',id:'base',opacity:.2,id2:'line'})
-	var x40=g1.line(70,380,734,380).attr({stroke:'black','stroke-width':1,'shape-rendering':'crispEdges',id:'base',opacity:.2,id2:'line'})
-	var x60=g1.line(70,260,734,260).attr({stroke:'black','stroke-width':1,'shape-rendering':'crispEdges',id:'base',opacity:.2,id2:'line'})
-	var x80=g1.line(70,140,734,140).attr({stroke:'black','stroke-width':1,'shape-rendering':'crispEdges',id:'base',opacity:.2,id2:'line'})
-	var x100=g1.line(70,20,734,20).attr({stroke:'black','stroke-width':1,'shape-rendering':'crispEdges',id:'base',opacity:.2,id2:'line'})
-
+	var xaxis=g1.line(70,620,734.5,620).attr({stroke:'black','stroke-width':1,'shape-rendering':'crispEdges',id:'base',id2:'line',type:'front'})
 	var x20=g1.line(70,500,80,500).attr({stroke:'black','stroke-width':1,'shape-rendering':'crispEdges',id:'base'})
 	var x40=g1.line(70,380,80,380).attr({stroke:'black','stroke-width':1,'shape-rendering':'crispEdges',id:'base'})
 	var x60=g1.line(70,260,80,260).attr({stroke:'black','stroke-width':1,'shape-rendering':'crispEdges',id:'base'})
@@ -109,39 +100,27 @@ function base_g1(){
 	var x80l=g1.text(65,140,'80%').attr({'font-family':'Lato','text-anchor':'end','dominant-baseline':'central','font-size':'18px',id:'base'})
 	var x100l=g1.text(65,20,'100%').attr({'font-family':'Lato','text-anchor':'end','dominant-baseline':'central','font-size':'18px',id:'base'})
 
-	var yaxis=g1.line(80,19.5,80,620).attr({stroke:'black','stroke-width':1,'shape-rendering':'crispEdges',id:'base',id2:'line'})
-	var top=g1.line(80,20,734,20).attr({stroke:'black','stroke-width':1,'shape-rendering':'crispEdges',id:'base',id2:'line'})
-	var right=g1.line(734,20,734,620).attr({stroke:'black','stroke-width':1,'shape-rendering':'crispEdges',id:'base',id2:'line'})
+	var yaxis=g1.line(80,19.5,80,620).attr({stroke:'black','stroke-width':1,'shape-rendering':'crispEdges',id:'base',id2:'line',type:'front'})
 }
 
 function basekey_g1(){
-	var ft=g1.rect(80,-45,20,10).attr({fill:color_scale[0],'shape-rendering':'crispEdges',cursor:'pointer'})
-	var pt=g1.rect(243.5,-45,20,10).attr({fill:color_scale[1],'shape-rendering':'crispEdges',cursor:'pointer'})
-	var unemp=g1.rect(407,-45,20,10).attr({fill:color_scale[2],'shape-rendering':'crispEdges',cursor:'pointer'})
-	var disabled=g1.rect(570.5,-45,20,10).attr({fill:color_scale[3],'shape-rendering':'crispEdges',cursor:'pointer'})
-	var carer=g1.rect(80,-25,20,10).attr({fill:color_scale[4],'shape-rendering':'crispEdges',cursor:'pointer'})
-	var retired=g1.rect(243.5,-25,20,10).attr({fill:color_scale[5],'shape-rendering':'crispEdges',cursor:'pointer'})
-	var student=g1.rect(407,-25,20,10).attr({fill:color_scale[6],'shape-rendering':'crispEdges',cursor:'pointer'})
-	var other=g1.rect(570.5,-25,20,10).attr({fill:color_scale[7],'shape-rendering':'crispEdges',cursor:'pointer'})
+	var ft=g1.rect(80,-43,20,10).attr({fill:color_scale[0],'shape-rendering':'crispEdges',cursor:'pointer'})
+	var pt=g1.rect(243.5,-43,20,10).attr({fill:color_scale[1],'shape-rendering':'crispEdges',cursor:'pointer'})
+	var unemp=g1.rect(407,-43,20,10).attr({fill:color_scale[2],'shape-rendering':'crispEdges',cursor:'pointer'})
+	var disabled=g1.rect(570.5,-43,20,10).attr({fill:color_scale[3],'shape-rendering':'crispEdges',cursor:'pointer'})
+	var carer=g1.rect(80,-23,20,10).attr({fill:color_scale[4],'shape-rendering':'crispEdges',cursor:'pointer'})
+	var retired=g1.rect(243.5,-23,20,10).attr({fill:color_scale[5],'shape-rendering':'crispEdges',cursor:'pointer'})
+	var student=g1.rect(407,-23,20,10).attr({fill:color_scale[6],'shape-rendering':'crispEdges',cursor:'pointer'})
+	var other=g1.rect(570.5,-23,20,10).attr({fill:color_scale[7],'shape-rendering':'crispEdges',cursor:'pointer'})
 
-	var fttext=g1.text(105,-40,'Full-time employed').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
-	var fttext=g1.text(268.5,-40,'Part-time employed').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
-	var fttext=g1.text(432,-40,'Unemployed').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
-	var fttext=g1.text(595,-40,'Retired').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
-	var fttext=g1.text(105,-20,'Disabled').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
-	var fttext=g1.text(268.5,-20,'Carer').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
-	var fttext=g1.text(432,-20,'Student').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
-	var fttext=g1.text(595,-20,'Other').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
-
-	// # Bruenig
-	// 	# 0 Full-time: PEMLR == 1 or PEMLR == 2 and PEHRUSLT > 34 or PEHRFTPT == 1
-	// 	# 1 Part-time: PEMLR == 1 or PEMLR == 2 and PEHRUSLT < 35 and PEHRFTPT != 1
-	// 	# 2 Unemployed: PEMLR == 3 or PEMLR == 4
-	// 	# 3 Retired: PEMLR == 5 or (PEMLR == 7 and PENLFACT == 5)
-	// 	# 4 Disabled: PEMLR == 6 or (PEMLR == 7 and PENLFACT == 1) or (PEMLR == 7 and PENLFACT == 2)
-	// 	# 5 Carer: (PEMLR == 7 and PENLFACT == 4)
-	// 	# 6 Student: (PEMLR == 7 and PENLFACT == 3)
-	// 	# 7 Other: (PEMLR == 7 and PENLFACT = 6) or (PEMLR == 7 and PENLFACT == -1)
+	var fttext=g1.text(105,-38,'Full-time employed').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
+	var fttext=g1.text(268.5,-38,'Part-time employed').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
+	var fttext=g1.text(432,-38,'Unemployed').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
+	var fttext=g1.text(595,-38,'Retired').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
+	var fttext=g1.text(105,-18,'Disabled').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
+	var fttext=g1.text(268.5,-18,'Carer').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
+	var fttext=g1.text(432,-18,'Student').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
+	var fttext=g1.text(595,-18,'Other').attr({'font-family':'Lato','text-anchor':'start','dominant-baseline':'central','font-size':'14px'})
 }
 
 function year_slider(){
@@ -229,15 +208,13 @@ function year_slider(){
 			// draw the red lines to indicate changes to the CPS
 			var x_value=60+((1994-start)/range)*gdp_portion
 			var red1=g1.line(x_value,710,x_value,740).attr({'stroke-width':1,'stroke':'red'})
-			// red1.hover(tooltip1on,tooltip1off)
 			var x_value=60+((1989-start)/range)*gdp_portion
 			var red2=g1.line(x_value,710,x_value,740).attr({'stroke-width':1,'stroke':'red'})
-			// red2.hover(tooltip2on,tooltip2off)
 			
 			// draw the slider in here so that it draws after all the recession blocks
 			selected=g1.rect(710-selected_width,705,selected_width,40).attr({fill:'#333333','stroke-width':1,'stroke':'black','shape-rendering':'crispEdges','fill-opacity':.1,cursor:'move'})
 			var shade=g1.rect(304,748,47,14).attr({fill:'#ddd'})
-			var slider_label2=g1.text(385,760,['slide to pick a year (recessions are shaded, ','red lines',' indicate a major change to the CPS survey)']).attr({'font-family':'Lato','text-anchor':'middle','font-size':'14px'})
+			var slider_label2=g1.text(385,760,['Slide to pick a year (recessions are shaded, ','red lines',' indicate a major change to the CPS survey)']).attr({'font-family':'Lato','text-anchor':'middle','font-size':'14px'})
 			slider_label2.selectAll("tspan")[1].attr({fill:'red'})
 			var yearlabel=g1.text(710-selected_width+(selected_width/2),690,[main[0][4].split('-')[0]+'-',main[0][4].split('-')[1]]).attr({'font-family':'Lato','text-anchor':'middle','font-size':'12px','font-weight':700,ident:'slidetext'})
 			yearlabel.selectAll("tspan:not(:first-child)").attr({x:yearlabel.attr('x'),dy:1*parseFloat(yearlabel.attr('font-size'))})
@@ -260,35 +237,33 @@ function year_slider(){
 					}
 					g1.select("text[ident='slidetext']").selectAll("tspan:not(:first-child)").attr({x:snap+(coords.width/2),dy:12})
 					g1.selectAll("text[ident='slidetext']").attr({x:snap+(coords.width/2)})
-					if(year!=current_slide_year){current_slide_year=year;redraw_g1(year,0,gmin,gmax)}
+					if(year!=current_slide_year){current_slide_year=year;drawdata_g1(year,0,gmin,gmax)}
 				}
 			})
 		})
 	})
 }
 
-function tooltip1on(e){
-	console.log(e.clientX,e.clientY)
-	g1.rect(e.clientX+3,e.clientY-200,120,80,3,3).attr({fill:'black',opacity:.5,type:'tooltip'})
-	// "In 1994, the CPS survey underwent a number of alterations. One of these alterations changed how respondents designate themselves as either retired or carers/home-makers. Consequently, many respondents who we would usually consider retired instead classified themselves as carers."
-
+function g1yvalue(y){
+	return g1ybounds[1]-y*(g1ybounds[1]-g1ybounds[0])
 }
 
-function tooltip1off(){
-	g1.selectAll()
+function g1xvalue(x){
+	return g1xbounds[0]+(g1xbounds[1]-g1xbounds[0])*((x-15)/(60))
 }
 
-function tooltip2on(){
-	// "Prior to 1989, it was not possible for respondents to choose 'retired' as an option. Instead, the 'other' option was designated 'other (including retired).' Consequently, if you look at the area chart prior to this date, you will see that 'other' percentages are high for those over 50."
+function g1reversey(coord){
+	return Math.round(100*((g1ybounds[1]-coord)/(g1ybounds[1]-g1ybounds[0])))
 }
 
-function tooltip2off(){
-
+function g1reversex(coord){
+	return 15+Math.floor(((coord-g1xbounds[0])/(g1xbounds[1]-g1xbounds[0]))*60)
 }
 
 function playredraw(){
 	if(gplaying==0){
 		gplaying=1
+		g1.selectAll("[ed='reticule']").animate({opacity:0},200)
 		playbutton.attr({opacity:0})
 		stopbutton.attr({opacity:1})
 		running=setInterval(function(){
@@ -321,126 +296,173 @@ function playredraw(){
 				g1.select("text[ident='slidetext']").selectAll("tspan:not(:first-child)").attr({dx:-47,dy:12})
 
 			}
-			redraw_g1(current_slide_year,0,gmin,gmax)
+			drawdata_g1(current_slide_year,0,gmin,gmax)
 		}, 700)
 	} else{
 		clearInterval(running)
 		playbutton.attr({opacity:1})
 		stopbutton.attr({opacity:0})
 		gplaying=0
+		g1.selectAll("[ed='reticule']").animate({opacity:1},200)
+		update_per()
 	}
 }
 
-function redraw_g1(year,newdraw,min,max){
-	if(newdraw==1){
-		g1.selectAll('path[id2="area"]').remove()
-		gmin=min
-		gmax=max
-	}
-	var data=[]
-	for(i=0;i<main.length;i++){
-		if(main[i][1]==year){
-			data.push(main[i])
-		}
-	}
+function drawdata_g1(year,newg,min,max){
+	working=1
+	// bracket = 0,1,2,3,4,5
 
-	// loop through variables b0-b7
-	var base=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-	var positions=[80]
-	for(var i=0;i<60;i++){
-		positions.push(80+(i+1)*(654/60))
-	}
+	// look at all this fancy no-loop shit
+	abracket_data=cbracket.filter(function(obs){
+		return obs[1]===year
+	})
+
+	var path_list=[]
+	var ages=abracket_data.length
+	var stringstart=''+g1ybounds[1]+','
+	var base=new Array(ages+1).join(stringstart).split(',').map(parseFloat)
+	var xinterval=(g1xbounds[1]-g1xbounds[0])/(abracket_data.length-1)
 
 	for(var i=5;i<13;i++){
-		if(i<min | i+1>max){
-			try{
-				g1.select("path[id='area"+i+"']").remove()
-			} catch(err){}
+		if(i<min){
+			// give these areas flat lines
+			path='M'+g1xbounds[0]+','+g1ybounds[1]
+
+			// travel along the base path
+			for(var j=1;j<abracket_data.length;j++){
+				path=path+'L'+(g1xbounds[0]+(xinterval*j))+','+g1ybounds[1]
+			}
+
+			// now the new 'top' path
+			for(var j=1;j<abracket_data.length;j++){
+				path=path+'L'+(g1xbounds[0]+xinterval*(abracket_data.length-(j+1)))+','+(g1ybounds[1]-.1)
+			}
+
+			// finally drop back down to the old base
+			path=path+'L'+g1xbounds[0]+','+g1ybounds[1]
+			path_list.push(path)
+		} else if(i>max){
+			// these areas are also flat but go above the selected area
+			path='M'+g1xbounds[0]+','+g1ybounds[0]
+			var base0=base[0]
+
+			// travel along the base path
+			for(var j=1;j<abracket_data.length;j++){
+				path=path+'L'+(g1xbounds[0]+(xinterval*j))+','+g1ybounds[0]
+			}
+
+			// now the new 'top' path
+			for(var j=1;j<abracket_data.length;j++){
+				path=path+'L'+(g1xbounds[0]+xinterval*(abracket_data.length-(j+1)))+','+(g1ybounds[0]+.1)
+				// base[tbracket_data.length-1-(1*j)]=(base[tbracket_data.length-1-(1*j)]-(g2ybounds[1]-tbracket_data[j][i]))
+			}
+
+			// finally drop back down to the old base
+			path=path+'L'+g1xbounds[0]+','+g1ybounds[0]
+			path_list.push(path)
+		} else {
+			path='M'+g1xbounds[0]+','+base[0]
+			var base0=base[0]
+
+			// travel along the base path
+			for(var j=1;j<abracket_data.length;j++){
+				path=path+'L'+(g1xbounds[0]+(xinterval*j))+','+base[j]
+			}
+
+			// now the new 'top' path
+			for(var j=0;j<abracket_data.length;j++){
+				path=path+'L'+(g1xbounds[0]+xinterval*(abracket_data.length-(j+1)))+','+(base[abracket_data.length-(j+1)]-(g1ybounds[1]-abracket_data[abracket_data.length-(j+1)][i]))
+				base[abracket_data.length-(j+1)]=(base[abracket_data.length-(j+1)]-(g1ybounds[1]-abracket_data[abracket_data.length-(j+1)][i]))
+			}
+
+			// finally drop back down to the old base
+			path=path+'L'+g1xbounds[0]+','+base0
+			path_list.push(path)
 		}
 	}
 
-	for(var i=min;i<max;i++){
-		path='M'+positions[0]+' '+get_value(base[0])
-		new_positions=[]
-
-		// the base path is the bottom of the area
-		for(var j=1;j<61;j++){
-			path=path+'L'+positions[j]+' '+get_value(base[j])
-		}
-
-		// now move up to the top path, which will become the new base path
-		newbase=[]
-		dvalue=data[data.length-1][i]
-		dvalue=get_value(parseFloat(dvalue)+parseFloat(base[base.length-1]))
-		path=path+'L'+positions[positions.length-1]+' '+dvalue
-
-		for(var j=60;j>=0;j--){
-			path=path+'L'+positions[j]+' '+get_value(data[j][i]+base[j])
-			newbase.unshift(data[j][i]+base[j])
-		}
-
-		// now draw back down to the base
-		path=path+'L'+positions[0]+' '+get_value(base[0])
-
-		if(newdraw==1){
-			// var area=g1.path('M80 620L80 620L90.9 620L101.8 620L112.7 620L123.6 620L134.5 620L145.4 620L156.3 620L167.2 620L178.1 620L189.0 620L199.9 620L210.8 620L221.7 620L232.6 620L243.5 620L254.4 620L265.3 620L276.2 620L287.1 620L298.0 620L308.9 620L319.8 620L330.7 620L341.6 620L352.5 620L363.4 620L374.3 620L385.2 620L396.1 620L407.0 620L417.9 620L428.8 620L439.7 620L450.6 620L461.5 620L472.4 620L483.3 620L494.2 620L505.1 620L516.0 620L526.9 620L537.8 620L548.7 620L559.6 620L570.5 620L581.4 620L592.3 620L603.2 620L614.1 620L625.0 620L635.9 620L646.8 620L657.7 620L668.6 620L679.5 620L690.4 620L701.3 620L712.2 620L723.1 620L734.0 620L734 619L734.0 619L723.1 619L712.2 619L701.3 619L690.4 619L679.5 619L668.6 619L657.7 619L646.8 619L635.9 619L625.0 619L614.1 619L603.2 619L592.3 619L581.4 619L570.5 619L559.6 619L548.7 619L537.8 619L526.9 619L516.0 619L505.1 619L494.2 619L483.3 619L472.4 619L461.5 619L450.6 619L439.7 619L428.8 619L417.9 619L407.0 619L396.1 619L385.2 619L374.3 619L363.4 619L352.5 619L341.6 619L330.7 619L319.8 619L308.9 619L298.0 619L287.1 619L276.2 619L265.3 619L254.4 619L243.5 619L232.6 619L221.7 619L210.8 619L199.9 619L189.0 619L178.1 619L167.2 619L156.3 619L145.4 619L134.5 619L123.6 619L112.7 619L101.8 619L90.9 619L80 619').attr({fill:color_scale[i-5],id:'area'+i})
-			var area=g1.path(path).attr({fill:color_scale[i-5],id:'area'+i,id2:'area',cursor:'pointer'})
-			// area.animate({path:path},500)
+	for(var i=0;i<path_list.length;i++){
+		if(newg==1){
+			var areag1=g1.path(path_list[i]).attr({fill:color_scale[i],type:'grouppath',column:i+5,cursor:'pointer'})
+			var areafake=g1.path(path_list[i]).attr({fill:color_scale[i],type:'front2',column:i+5,opacity:0,cursor:'pointer'})
+			areafake.hover(highlight_area,unhighlight_area)
+			areafake.click(clickredraw)
+			working=0
 		} else{
-			var area=g1.select("path[id='area"+i+"']").animate({path:path},500)
+			if(i==path_list.length-1){
+				g1.select("path[type='grouppath'][column='"+(i+5)+"']").animate({path:path_list[i]},600,function(){
+					working=0
+					update_per()
+				})
+			} else{
+				g1.select("path[type='grouppath'][column='"+(i+5)+"']").animate({path:path_list[i]},600)
+			}
+			g1.select("path[type='front2'][column='"+(i+5)+"']").attr({path:path_list[i]})
 		}
-		area.hover(highlight_area,unhighlight_area)
-		try{area.unclick(clickredraw)}catch(err){}
-		area.click(clickredraw)
-		base=newbase
-
 	}
 
-	function get_value(y){
-		return 620-y*600
-	}
-
-	base_g1()
+	g1.append(g1.selectAll("[type='front']"))
+	g1.append(g1.selectAll("[type='front2']"))
 }
 
 function clickredraw(ev){
 	if(gclicked==0){
 		item=Snap(ev.target)
-		type=item.attr('id')
-		type=type.slice(4,type.length)
+		type=item.attr('column')
 		gmin=parseInt(type)
-		gmax=parseInt(type)+1
+		gmax=parseInt(type)
 		gclicked=1
-		redraw_g1(current_slide_year,0,parseInt(type),parseInt(type)+1)
+		drawdata_g1(current_slide_year,0,gmin,gmin)
 	} else if(gclicked==1){
 		gclicked=0
-		redraw_g1(current_slide_year,1,5,13)
+		drawdata_g1(current_slide_year,0,5,13)
+		gmin=5
+		gmax=13
 	}
 }
 
+// function highlight_area(ev){
+// 	item=Snap(ev.target)
+// 	g1.append(item)
+// 	// var f = g1.filter(Snap.filter.shadow(0, 0, 6))
+// 	a=g1.selectAll('[id2="line"]')
+// 	for(var i=0;i<a.length;i++){
+// 		g1.append(a[i])
+// 	}
+// 	// item.attr({filter:f})
+// 	// areas=g1.selectAll("path[id2='area']")
+// 	// for(var i=0;i<areas.length;i++){
+// 	// 	if(areas[i]!=item){
+// 	// 		areas[i].attr({opacity:.6})
+// 	// 	}
+// 	// }
+// 	item.attr({'fill-opacity':.7})
+// 	item.attr({'stroke':item.attr('fill'),'stroke-width':1})
+// }
+
+// function unhighlight_area(ev){
+// 	item=Snap(ev.target)
+// 	// item.attr({filter:''})
+// 	// areas=g1.selectAll("path[id2='area']").attr({opacity:1})
+// 	item.attr({'fill-opacity':1})
+// 	item.attr({'stroke-width':0})
+// }
+
 function highlight_area(ev){
-	item=Snap(ev.target)
+	temp=Snap(ev.target)
+	item=g1.select("[type='grouppath'][column='"+temp.attr('column')+"']")
+
 	g1.append(item)
-	// var f = g1.filter(Snap.filter.shadow(0, 0, 6))
-	a=g1.selectAll('[id2="line"]')
-	for(var i=0;i<a.length;i++){
-		g1.append(a[i])
-	}
-	// item.attr({filter:f})
-	// areas=g1.selectAll("path[id2='area']")
-	// for(var i=0;i<areas.length;i++){
-	// 	if(areas[i]!=item){
-	// 		areas[i].attr({opacity:.6})
-	// 	}
-	// }
+	g1.append(g1.selectAll("[type='front']"))
+	g1.append(g1.selectAll("[type='front2']"))
+
 	item.attr({'fill-opacity':.7})
 	item.attr({'stroke':item.attr('fill'),'stroke-width':1})
 }
 
 function unhighlight_area(ev){
-	item=Snap(ev.target)
-	// item.attr({filter:''})
-	// areas=g1.selectAll("path[id2='area']").attr({opacity:1})
+	temp=Snap(ev.target)
+	item=g1.select("[type='grouppath'][column='"+temp.attr('column')+"']")
 	item.attr({'fill-opacity':1})
 	item.attr({'stroke-width':0})
 }
@@ -461,14 +483,20 @@ function readcsv(file,dateflag,callback) {
 				// return years only
 				if(dateflag==0){
 					for(var i=1;i<text.length;i++){
-						final.push([parseInt(text[i][0].split('-')[0]),parseFloat(text[i][1])])
+						a=[parseInt(text[i][0].split('-')[0]),parseFloat(text[i][1])]
+						if(!isNaN(a[0]) & !isNaN(a[1])){
+							final.push(a)
+						}
 					}
 				}
 
 				// convert months to fractions and return years+(months-1)/12
 				if(dateflag==1){
 					for(var i=1;i<text.length;i++){
-						final.push([parseFloat(text[i][0].split('-')[0])+(parseFloat(text[i][0].split('-')[1])-1)/12,parseFloat(text[i][1])])
+						a=[parseFloat(text[i][0].split('-')[0])+(parseFloat(text[i][0].split('-')[1])-1)/12,parseFloat(text[i][1])]
+						if(!isNaN(a[0]) & !isNaN(a[1])){
+							final.push(a)
+						}
 					}
 				}
 				callback(final)
@@ -516,6 +544,84 @@ function closest(array,num){
             }
       }
     return ans;
+}
+
+//year tracker
+function mousetrack(){
+	var mouselinex=g1.line(g1xvalue(40),g1ybounds[0],g1xvalue(40),g1ybounds[1]).attr({stroke:'#000','stroke-width':1,type:'front','shape-rendering':'crispEdges','stroke-dasharray':[8,8],ed:'reticule'})
+	var mouseliney=g1.line(g1xbounds[0],g1yvalue(.5),g1xbounds[1],g1yvalue(.5)).attr({stroke:'#000','stroke-width':1,type:'front','shape-rendering':'crispEdges','stroke-dasharray':[8,8],ed:'reticule'})
+	// var mouse_year=g2.text(xvalue(2009)+4,g2ybounds[0]-2,'2009').attr({'font-face':'Lato','text-anchor':'middle','font-size':'18px',type:'front'})
+	// var mouse_percent=g2.text(g2xbounds[1]+3,yvalue(.6)+5,'60%').attr({'font-face':'Lato','text-anchor':'start','font-size':'18px',type:'front'})
+	var mousebox=g1.rect(Math.round(g1xvalue(40)+10),Math.round(g1yvalue(.5)-60),50,50).attr({fill:'white','stroke-width':1,'stroke':'black','shape-rendering':'crispEdges',type:'front2',ed:'reticule'})
+	mbox1=g1.text(g1xvalue(40)+35,g1yvalue(.5)-39,'40').attr({'font-face':'Lato','text-anchor':'middle','font-size':'18px',type:'front2',ed:'reticule'})
+	var age=50
+	var mouse_data=abracket_data.filter(function(obs){
+		return obs[0]===age
+	})
+	var per=(g1reversey(mouse_data[0][5])).toFixed(0)+'%'
+	mbox2=g1.text(g1xvalue(40)+35,g1yvalue(.5)-18,per).attr({'font-face':'Lato','text-anchor':'middle','font-size':'18px',type:'front2',fill:color_scale[0],'font-weight':'bold',ed:'reticule'})
+	g1.append(g1.selectAll("[type='front']"))
+	g1.append(g1.selectAll("[type='front2']"))
+
+	test=function OnMouseMove(loc,evt,callback) {
+		if(working==0 & gplaying==0){
+			var tempxloc=Math.round(loc['x'])
+			var tempyloc=Math.round(loc['y'])
+
+			if(tempxloc>=g1xbounds[0] & tempxloc<=g1xbounds[1] & tempyloc>=g1ybounds[0] & tempyloc<=g1ybounds[1]){
+				xloc=Math.round(loc['x'])
+				yloc=Math.round(loc['y'])
+				var item=Snap(evt.target)
+				mouselinex.attr({x1:xloc,x2:xloc})
+				mouseliney.attr({y1:yloc,y2:yloc})
+				if(xloc<g1xbounds[1]-50){
+					mousebox.attr({x:xloc+10,y:yloc-60})
+				} else{
+					mousebox.attr({x:xloc-60,y:yloc-60})
+				}
+				
+				var age=g1reversex(xloc)
+
+				var mouse_data=abracket_data.filter(function(obs){
+					return obs[0]===age
+				})
+				per=(g1reversey(mouse_data[0][item.attr('column')])).toFixed(0)+'%'
+
+				if(per=='NaN%'){per='-'}
+
+				if(xloc<g1xbounds[1]-50){
+					mbox1.attr({text:age,x:xloc+35,y:yloc-39})
+					mbox2.attr({text:per,y:yloc-18,x:xloc+35,fill:item.attr('fill')})
+				} else{
+					mbox1.attr({text:age,x:xloc-35,y:yloc-39})
+					mbox2.attr({text:per,y:yloc-18,x:xloc-35,fill:item.attr('fill')})
+				}
+				callback()
+			}
+		}
+	}
+
+	g1svgel.addEventListener('mousemove',function(evt){
+		var loc=g1cursorPoint(evt)
+		test(loc,evt,function(){
+			g1.append(g1.selectAll("[type='front2']"))
+		})
+	})
+}
+
+function update_per(){
+	var item=Snap.getElementByPoint(xloc,yloc)
+	var year=g1reversex(xloc)
+
+	var mouse_data=abracket_data.filter(function(obs){
+		return obs[0]===year
+	})
+	per=(g1reversey(mouse_data[0][item.attr('column')])).toFixed(0)+'%'
+
+	if(per=='NaN%'){per='-'}
+
+	mbox1.attr({text:year})
+	mbox2.attr({text:per,fill:item.attr('fill')})
 }
 
 </script>

@@ -6,7 +6,8 @@ import os.path
 import json
 import pandas as pd
 
-basepath=os.path.dirname(os.path.abspath(__file__))
+# basepath=os.path.dirname(os.path.abspath(__file__))
+basepath="/Users/austinclemens/Desktop/Interactive"
 cpsloc='http://thedataweb.rm.census.gov/ftp/cps_ftp.html#cpsbasic'
 mainloc=basepath+'main.csv'
 main2loc=basepath+'main2.csv'
@@ -15,18 +16,20 @@ gdp_loc=basepath+'gdp.csv'
 rec_loc=basepath+'recessions.csv'
 months=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
 
-filename=scrape_newcps()
-data=parse_CPS(filename)
-alldata=master_append(data)
+# filename=scrape_newcps()
+# data=parse_CPS(filename)
+# alldata=master_append(data)
 
-formatted=output_for_interactive(alldata)
-formatted.to_csv(mainloc,index=False)
+# formatted=output_for_interactive(alldata)
+# formatted.to_csv(mainloc,index=False)
 
-formatted2=output_for_interactive2(alldata)
-formatted2.to_csv(main2loc,index=False)
+# formatted2=output_for_interactive2(alldata)
+# formatted2.to_csv(main2loc,index=False)
 
-scrape_gdp(gdp_loc)
-scrape_recessions(rec_loc)
+# scrape_gdp(gdp_loc)
+# scrape_recessions(rec_loc)
+
+# quit()
 
 
 def master_append(data):
@@ -159,10 +162,12 @@ def output_for_interactive(parsed):
 	final=[]
 	while currentyear>=minyear:
 		print currentyear
-		if minmonth==1:
+		if startmonth==1:
 			sample=parsed[parsed['year']==currentyear]
 		else:
 			sample=parsed[((parsed['year']==currentyear) & (parsed['month']<=maxmonth)) | ((parsed['year']==currentyear-1) & (parsed['month']>=startmonth))]
+
+		# print sample
 
 		for age in range(15,76,1):
 			age_sample=sample[sample['age']==age]
@@ -216,7 +221,7 @@ def output_for_interactive2(parsed):
 	group_names=['<25','25-34','35-44','45-54','>54','25-54']
 	while currentyear>=minyear:
 		print currentyear
-		if minmonth==1:
+		if startmonth==1:
 			sample=parsed[parsed['year']==currentyear]
 		else:
 			sample=parsed[((parsed['year']==currentyear) & (parsed['month']<=maxmonth)) | ((parsed['year']==currentyear-1) & (parsed['month']>=startmonth))]
