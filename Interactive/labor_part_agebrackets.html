@@ -5,15 +5,20 @@
 <head>
 	<title>History of Labor Participation by Age Bracket</title>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/snap.svg/0.4.1/snap.svg-min.js"></script>
+	<link href="css/materialdesignicons.min.css" media="all" rel="stylesheet" type="text/css" />
+
 	<style>
 		@import url(https://fonts.googleapis.com/css?family=Lato:400,700);
-		body {font-family: 'Lato'; font-weight:300; line-height:140%; padding-bottom: 100px;}
 
+		.select_carat{position:relative;}
+		.select_carat:after{content:"\f236";font-family:"Material Design Icons";color:white;font-size:1em;right:8px;top:1px;position:absolute;pointer-events:none;}
+		.select_carat:before{background:#67c2a5;}
 		.subconstraint{max-width:845px;}
 		.graph2{max-width:1045px}
 		.hed{font-family:'Lato';font-size:22px;font-weight:700;}
 		.dek{font-family:'Lato';font-size:17px;margin-bottom:20px;}
-		.note{font-family:'Lato';font-size:11px;margin-top:20px;line-height:1.1;}	
+		.note{font-family:'Lato';font-size:11px;margin-top:20px;line-height:1.1;}
+		.styled-select select{position:relative;font-size:1em;-moz-appearance:none;-webkit-appearance:none;padding:5px;padding-right:25px;margin:0;border:1px solid black;border-radius:2px;background:white;color:#555}
 	</style>
 
 	<script>
@@ -33,14 +38,16 @@
 		<div class='hed'>A history of labor market participation by age bracket</div>
 		<div class='dek'>Choose an age bracket to see how labor participation within that bracket has changed over time. Click on an area of the chart to isolate that category.</div>
 		<div class='styled-select'>
-			<select name="select" onchange='g2redraw()' id='g2select'>
-				<option value=0><25 years old</option> 
-				<option value=1 selected>25-34 years old</option>
-				<option value=2>35-44 years old</option>
-				<option value=3>45-54 years old</option>
-				<option value=4>>54 years old</option>
-				<option value=5>Prime age (25-54)</option>
-			</select>
+			<span class='select_carat'>
+				<select name="select" onchange='g2redraw()' id='g2select'>
+					<option value=0><25 years old</option> 
+					<option value=1 selected>25-34 years old</option>
+					<option value=2>35-44 years old</option>
+					<option value=3>45-54 years old</option>
+					<option value=4>>54 years old</option>
+					<option value=5>Prime age (25-54)</option>
+				</select>
+			</span>
 		</div>
 	</div>
 
@@ -148,16 +155,16 @@ function basegraph_g2(wide){
 	g2.line(xvalue(1989,55),yvalue(1),xvalue(1989,55),yvalue(0)).attr({'stroke-width':1,'stroke':'red','shape-rendering':'crispEdges',type:'front'})
 
 	// y-axis ticks
-	g2.text(44,yvalue(1)+6,'100%').attr({'font-face':'Lato','text-anchor':'end','font-size':'18px'})
-	g2.text(44,yvalue(.8)+6,'80%').attr({'font-face':'Lato','text-anchor':'end','font-size':'18px'})
-	g2.text(44,yvalue(.6)+6,'60%').attr({'font-face':'Lato','text-anchor':'end','font-size':'18px'})
-	g2.text(44,yvalue(.4)+6,'40%').attr({'font-face':'Lato','text-anchor':'end','font-size':'18px'})
-	g2.text(44,yvalue(.2)+6,'20%').attr({'font-face':'Lato','text-anchor':'end','font-size':'18px'})
-	g2.text(44,yvalue(0)+6,'0%').attr({'font-face':'Lato','text-anchor':'end','font-size':'18px'})
+	g2.text(44,yvalue(1)+6,'100%').attr({'font-family':'Lato','text-anchor':'end','font-size':'18px'})
+	g2.text(44,yvalue(.8)+6,'80%').attr({'font-family':'Lato','text-anchor':'end','font-size':'18px'})
+	g2.text(44,yvalue(.6)+6,'60%').attr({'font-family':'Lato','text-anchor':'end','font-size':'18px'})
+	g2.text(44,yvalue(.4)+6,'40%').attr({'font-family':'Lato','text-anchor':'end','font-size':'18px'})
+	g2.text(44,yvalue(.2)+6,'20%').attr({'font-family':'Lato','text-anchor':'end','font-size':'18px'})
+	g2.text(44,yvalue(0)+6,'0%').attr({'font-family':'Lato','text-anchor':'end','font-size':'18px'})
 
 	// x-axis ticks
 	g2.line(xvalue(Math.floor(maxtime)),g2ybounds[1],xvalue(Math.floor(maxtime)),g2ybounds[1]+5).attr({'stroke-width':1,'stroke':'black','shape-rendering':'crispEdges'})
-	g2.text(xvalue(Math.floor(maxtime)),g2ybounds[1]+23,Math.floor(maxtime)).attr({'font-face':'Lato','text-anchor':'middle','font-size':'18px'})
+	g2.text(xvalue(Math.floor(maxtime)),g2ybounds[1]+23,Math.floor(maxtime)).attr({'font-family':'Lato','text-anchor':'middle','font-size':'18px'})
 
 	// draw axes - begin at about y=50, nothing but %s on the y-axis so you can start pretty tight
 	g2.line(50,55,50,g2height-125).attr({'stroke-width':1,'stroke':'black','shape-rendering':'crispEdges',type:'front'})
@@ -167,7 +174,7 @@ function basegraph_g2(wide){
 	while(temp>mintime+5){
 		temp=temp-5
 		g2.line(xvalue(Math.floor(temp)),g2ybounds[1],xvalue(Math.floor(temp)),g2ybounds[1]+5).attr({'stroke-width':1,'stroke':'black','shape-rendering':'crispEdges'})
-		g2.text(xvalue(Math.floor(temp)),g2ybounds[1]+23,Math.floor(temp)).attr({'font-face':'Lato','text-anchor':'middle','font-size':'18px'})
+		g2.text(xvalue(Math.floor(temp)),g2ybounds[1]+23,Math.floor(temp)).attr({'font-family':'Lato','text-anchor':'middle','font-size':'18px'})
 	}
 
 	var shade=g2.rect(142,g2ybounds[1]+43,47,14).attr({fill:'#ddd'})
@@ -419,16 +426,16 @@ function unhighlight_area(ev){
 function mousetrack(){
 	var mouselinex=g2.line(xvalue(2009),g2ybounds[0],xvalue(2009),g2ybounds[1]-.5).attr({stroke:'#000','stroke-width':1,type:'front','shape-rendering':'crispEdges','stroke-dasharray':[8,8]})
 	var mouseliney=g2.line(g2xbounds[0],yvalue(.6),g2xbounds[1],yvalue(.6)).attr({stroke:'#000','stroke-width':1,type:'front','shape-rendering':'crispEdges','stroke-dasharray':[8,8]})
-	// var mouse_year=g2.text(xvalue(2009)+4,g2ybounds[0]-2,'2009').attr({'font-face':'Lato','text-anchor':'middle','font-size':'18px',type:'front'})
-	// var mouse_percent=g2.text(g2xbounds[1]+3,yvalue(.6)+5,'60%').attr({'font-face':'Lato','text-anchor':'start','font-size':'18px',type:'front'})
+	// var mouse_year=g2.text(xvalue(2009)+4,g2ybounds[0]-2,'2009').attr({'font-family':'Lato','text-anchor':'middle','font-size':'18px',type:'front'})
+	// var mouse_percent=g2.text(g2xbounds[1]+3,yvalue(.6)+5,'60%').attr({'font-family':'Lato','text-anchor':'start','font-size':'18px',type:'front'})
 	var mousebox=g2.rect(Math.round(xvalue(2009)+10),Math.round(yvalue(.6)-60),50,50).attr({fill:'white','stroke-width':1,'stroke':'black','shape-rendering':'crispEdges',type:'front2'})
-	mbox1=g2.text(xvalue(2009)+35,yvalue(.6)-39,'2009').attr({'font-face':'Lato','text-anchor':'middle','font-size':'18px',type:'front2'})
+	mbox1=g2.text(xvalue(2009)+35,yvalue(.6)-39,'2009').attr({'font-family':'Lato','text-anchor':'middle','font-size':'18px',type:'front2'})
 	var year=2009
 	var mouse_data=tbracket_data.filter(function(obs){
 		return obs[1]===year
 	})
 	var per=(reversey(mouse_data[0][5])).toFixed(0)+'%'
-	mbox2=g2.text(xvalue(2009)+35,yvalue(.6)-18,per).attr({'font-face':'Lato','text-anchor':'middle','font-size':'18px',type:'front2',fill:color_scale[0],'font-weight':'bold'})
+	mbox2=g2.text(xvalue(2009)+35,yvalue(.6)-18,per).attr({'font-family':'Lato','text-anchor':'middle','font-size':'18px',type:'front2',fill:color_scale[0],'font-weight':'bold'})
 	g2.append(g2.selectAll("[type='front']"))
 	g2.append(g2.selectAll("[type='front2']"))
 
