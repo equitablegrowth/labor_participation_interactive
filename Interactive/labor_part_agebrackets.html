@@ -10,15 +10,44 @@
 	<style>
 		@import url(https://fonts.googleapis.com/css?family=Lato:400,700);
 
-		.select_carat{position:relative;}
-		.select_carat:after{content:"\f236";font-family:"Material Design Icons";color:white;font-size:1em;right:8px;top:1px;position:absolute;pointer-events:none;}
-		.select_carat:before{background:#67c2a5;}
+		.select_carat{position:relative;display:inline-block;}
+		.select_carat:after{
+			content:"\f236";
+			font-family:"Material Design Icons";
+			font-weight:700;
+			width:23px;
+			height:24px;
+			color:white;
+			font-size:1.1em;
+			right:1px;
+			top:1px;
+			position:absolute;
+			pointer-events:none;
+			background:#67c2a5;
+			border-radius:0 1 1 0;
+			padding-left:4px;
+			padding-top:4px;
+			margin-bottom:5px
+		}
 		.subconstraint{max-width:845px;}
 		.graph2{max-width:1045px}
 		.hed{font-family:'Lato';font-size:22px;font-weight:700;}
 		.dek{font-family:'Lato';font-size:17px;margin-bottom:20px;}
 		.note{font-family:'Lato';font-size:11px;margin-top:20px;line-height:1.1;}
-		.styled-select select{position:relative;font-size:1em;-moz-appearance:none;-webkit-appearance:none;padding:5px;padding-right:25px;margin:0;border:1px solid black;border-radius:2px;background:white;color:#555}
+		.styled-select select{
+			height:30px;
+			position:relative;
+			font-size:1em;
+			-moz-appearance:none;
+			-webkit-appearance:none;
+			padding:5px;
+			padding-right:29px;
+			margin:0;
+			border:1px solid black;
+			border-radius:2px;
+			background:white;
+			color:#555
+		}
 	</style>
 
 	<script>
