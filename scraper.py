@@ -5,6 +5,7 @@ import zipfile
 import os.path
 import json
 import pandas as pd
+import boto3
 
 # basepath=os.path.dirname(os.path.abspath(__file__))
 basepath="/Users/austinclemens/Desktop/Interactive"
@@ -15,6 +16,7 @@ mainpartsloc=basepath+'main_parts.csv'
 gdp_loc=basepath+'gdp.csv'
 rec_loc=basepath+'recessions.csv'
 months=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
+s3=boto3.resource('s3')
 
 # filename=scrape_newcps()
 # data=parse_CPS(filename)
@@ -30,6 +32,13 @@ months=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
 # scrape_recessions(rec_loc)
 
 # quit()
+
+for bucket in s3.buckets.all():
+	print(bucket.name)
+
+# Upload a new file
+data = open('test.jpg', 'rb')
+s3.Bucket('my-bucket').put_object(Key='test.jpg', Body=data)
 
 
 def master_append(data):
