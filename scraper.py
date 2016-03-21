@@ -12,7 +12,7 @@ basepath="/Users/austinclemens/Desktop/Interactive"
 cpsloc='http://thedataweb.rm.census.gov/ftp/cps_ftp.html#cpsbasic'
 mainloc=basepath+'main.csv'
 main2loc=basepath+'main2.csv'
-mainpartsloc=basepath+'main_parts.csv'
+mainpartsloc='cps_update/main_parts.csv'
 gdp_loc=basepath+'gdp.csv'
 rec_loc=basepath+'recessions.csv'
 months=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
@@ -33,24 +33,26 @@ s3=boto3.resource('s3')
 
 # quit()
 
-for bucket in s3.buckets.all():
-	print(bucket.name)
-
 # Upload a new file
 data = open('test.jpg', 'rb')
-s3.Bucket('my-bucket').put_object(Key='test.jpg', Body=data)
+s3.Bucket('assets.equitablegrowth.org').put_object(Key='test.txt', Body=data)
 
+# read a file
+s3.get_object(Key='test.txt',Bucket='assets.equitablegrowth.org')['Body'].read()
+
+s3get=boto3.client('s3')
+s3put=boto3.resource('s3')
 
 def master_append(data):
 	# take data from parse_CPS and append it to the master dataset in main_parts.csv. Load main_parts, write it to disk, and return it.
-	df = pd.read_csv(mainpartsloc)
+	df=pd.read_csv(s3.get_object(Key=mainpartsloc,Bucket='assets.equitablegrowth.org')['Body'])
 	alldata=data.append(df)
-	alldata.to_csv(mainpartsloc,index=False)
+	s3put.Bucket('assets.equitablegrowth.org').put_object(Key=mainpartsloc, Body=df.to_csv(index=False))
 	return alldata
 
 
 def scrape_newcps():
-	with open(mainloc,'rU') as csvfile:
+	with open(s3.get_object(Key=mainpartsloc,Bucket='assets.equitablegrowth.org')['Body'],'rU') as csvfile:
 		reader=csv.reader(csvfile)
 		data=[row for row in reader]
 
