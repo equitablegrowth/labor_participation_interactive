@@ -6,58 +6,35 @@ import os.path
 import json
 import pandas as pd
 import boto3
+import StringIO
 
-# basepath=os.path.dirname(os.path.abspath(__file__))
-basepath="/Users/austinclemens/Desktop/Interactive"
+basepath='/home/aclemens/austins_projects/cps_update'
 cpsloc='http://thedataweb.rm.census.gov/ftp/cps_ftp.html#cpsbasic'
-mainloc=basepath+'main.csv'
-main2loc=basepath+'main2.csv'
+mainloc='cps_update/main.csv'
+main2loc='cps_update/main2.csv'
 mainpartsloc='cps_update/main_parts.csv'
-gdp_loc=basepath+'gdp.csv'
-rec_loc=basepath+'recessions.csv'
+gdp_loc='cps_update/gdp.csv'
+rec_loc='cps_update/recessions.csv'
 months=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
-s3=boto3.resource('s3')
-
-# filename=scrape_newcps()
-# data=parse_CPS(filename)
-# alldata=master_append(data)
-
-# formatted=output_for_interactive(alldata)
-# formatted.to_csv(mainloc,index=False)
-
-# formatted2=output_for_interactive2(alldata)
-# formatted2.to_csv(main2loc,index=False)
-
-# scrape_gdp(gdp_loc)
-# scrape_recessions(rec_loc)
-
-# quit()
-
-# Upload a new file
-data = open('test.jpg', 'rb')
-s3.Bucket('assets.equitablegrowth.org').put_object(Key='test.txt', Body=data)
-
-# read a file
-s3.get_object(Key='test.txt',Bucket='assets.equitablegrowth.org')['Body'].read()
 
 s3get=boto3.client('s3')
 s3put=boto3.resource('s3')
 
 def master_append(data):
 	# take data from parse_CPS and append it to the master dataset in main_parts.csv. Load main_parts, write it to disk, and return it.
-	df=pd.read_csv(s3.get_object(Key=mainpartsloc,Bucket='assets.equitablegrowth.org')['Body'])
+	df=pd.read_csv(s3get.get_object(Key=mainpartsloc,Bucket='assets.equitablegrowth.org')['Body'])
 	alldata=data.append(df)
 	s3put.Bucket('assets.equitablegrowth.org').put_object(Key=mainpartsloc, Body=df.to_csv(index=False))
 	return alldata
 
 
 def scrape_newcps():
-	with open(s3.get_object(Key=mainpartsloc,Bucket='assets.equitablegrowth.org')['Body'],'rU') as csvfile:
-		reader=csv.reader(csvfile)
-		data=[row for row in reader]
+	d=s3get.get_object(Key=mainloc,Bucket='assets.equitablegrowth.org')['Body'].read()
+	d=csv.reader(d.split('\n'),delimiter=',')
+	data=[row for row in d]
 
-	year=int(data[1][1])
-	lastmonth=int(data[1][3])
+	year=int(float(data[1][1]))
+	lastmonth=int(float(data[1][3]))
 
 	if lastmonth==12:
 		year=year+1
@@ -278,10 +255,8 @@ def scrape_gdp(gdp_loc):
 	for obs in data:
 		output.append([obs['date'],float(obs['value'])])
 
-	with open(gdp_loc,'wb') as csvfile:
-		writer=csv.writer(csvfile)
-		for row in output:
-			writer.writerow(row)
+	df=pd.DataFrame(output,columns=['observation_date','GDPC1_PCH'])
+	s3put.Bucket('assets.equitablegrowth.org').put_object(Key=gdp_loc, Body=df.to_csv(index=False))
 
 
 def scrape_recessions(rec_loc):
@@ -295,13 +270,24 @@ def scrape_recessions(rec_loc):
 	for obs in data:
 		output.append([obs['date'],int(obs['value'])])
 
-	with open(rec_loc,'wb') as csvfile:
-		writer=csv.writer(csvfile)
-		for row in output:
-			writer.writerow(row)
+	df=pd.DataFrame(output,columns=['observation_date','USREC'])
+	s3put.Bucket('assets.equitablegrowth.org').put_object(Key=rec_loc, Body=df.to_csv(index=False))
 
 
+filename=scrape_newcps()
+data=parse_CPS(filename)
+alldata=master_append(data)
+
+formatted=output_for_interactive(alldata)
+s3put.Bucket('assets.equitablegrowth.org').put_object(Key=mainloc, Body=formatted.to_csv(index=False))
 
 
+formatted2=output_for_interactive2(alldata)
+s3put.Bucket('assets.equitablegrowth.org').put_object(Key=main2loc, Body=formatted2.to_csv(index=False))
+
+scrape_gdp(gdp_loc)
+scrape_recessions(rec_loc)
+
+quit()
 
 
